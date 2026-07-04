@@ -1,0 +1,10 @@
+<div class="stat bg-base-100 border border-base-300 rounded-box shadow-sm">
+  <div class="stat-figure text-primary">
+    <div class="w-12 h-12 rounded-box bg-primary/10 text-primary grid place-items-center text-2xl">
+      <ng-icon [name]="icon"></ng-icon>
+    </div>
+  </div>
+  <div class="stat-title text-xs uppercase tracking-widest">{{ label }}</div>
+  <div class="stat-value text-primary">{{ value }}</div>
+  <div *ngIf="helper" class="stat-desc text-base-content/70">{{ helper }}</div>
+</div>

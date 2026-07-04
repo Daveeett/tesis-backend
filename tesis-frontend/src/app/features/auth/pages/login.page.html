@@ -1,0 +1,64 @@
+
+<section class="min-h-screen bg-base-200">
+  <div class="grid min-h-screen w-full xl:grid-cols-[60%_40%]">
+    <div class="bg-primary p-10 flex items-center min-h-screen">
+      <div class="max-w-xl text-white">
+        <h2 class="text-4xl font-extrabold mb-4">Distrov Inc.</h2>
+        <p class="text-base leading-8">Una solución para tu problema</p>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center p-6 bg-base-200">
+      <div class="card w-auto bg-base-100 shadow-2xl">
+        <div class="card-body gap-6">
+          <div class="text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-box bg-primary text-primary-content mb-3">
+              <ng-icon name="heroBuildingStorefront" class="text-xl"></ng-icon>
+            </div>
+            <h1 class="text-3xl font-extrabold text-primary m-0">Mini Market Urbano</h1>
+            <p class="text-base-content/70 font-medium mt-2">Control de caja y microcreditos</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text text-xs font-bold uppercase tracking-widest">Correo</span>
+              </div>
+              <input
+                formControlName="email"
+                type="email"
+                placeholder="admin@minimarket.local"
+                class="input input-bordered w-full"
+              />
+            </label>
+
+            <label class="form-control w-full">
+              <div class="label">
+                <span class="label-text text-xs font-bold uppercase tracking-widest">Clave</span>
+              </div>
+              <input
+                formControlName="password"
+                type="password"
+                placeholder="Admin123*"
+                class="input input-bordered w-full"
+              />
+            </label>
+
+            <button class="btn btn-primary w-full mt-2" type="submit" [disabled]="loading()">
+              {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+            </button>
+          </form>
+
+          <div class="flex flex-col gap-2 text-sm">
+            <div class="alert alert-info text-xs">
+              <span>Usuario demo: admin&#64;minimarket.local / Admin123*</span>
+            </div>
+            <div class="alert alert-error text-xs" *ngIf="error()">
+              <span>{{ error() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

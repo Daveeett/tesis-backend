@@ -1,0 +1,111 @@
+<div class="drawer lg:drawer-open min-h-screen bg-base-200 text-base-content">
+  <input id="app-drawer" type="checkbox" class="drawer-toggle" />
+
+  <div class="drawer-content flex flex-col">
+    <div class="navbar bg-base-100/90 border-b border-base-300 px-4 lg:hidden">
+      <label for="app-drawer" class="btn btn-ghost btn-square">
+        <ng-icon name="heroBars3" class="text-xl"></ng-icon>
+      </label>
+      <div class="flex items-center gap-2 font-semibold">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-box bg-primary text-primary-content">
+          <ng-icon name="heroBuildingStorefront" class="text-lg"></ng-icon>
+        </span>
+        Mini Market Urbano
+      </div>
+    </div>
+
+    <main class="flex-1">
+      <div class="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-10">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-base-content/60">Operaciones</p>
+            <h1 class="text-2xl font-semibold">Resumen operativo</h1>
+          </div>
+          <div class="badge badge-outline badge-success gap-2">
+            <span class="inline-flex h-2 w-2 rounded-full bg-success"></span>
+            Sistema listo para operar
+          </div>
+        </div>
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+
+  <div class="drawer-side">
+    <label for="app-drawer" class="drawer-overlay"></label>
+    <aside class="w-full bg-base-100 border-r border-base-300 px-4 py-5">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-box bg-primary text-primary-content">
+          <ng-icon name="heroBuildingStorefront" class="text-lg"></ng-icon>
+        </span>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/60">Panel</p>
+          <p class="text-base font-semibold">Mini Market Urbano</p>
+        </div>
+      </div>
+
+      <ul class="menu menu-md w-full ">
+        <li>
+          <a routerLink="/dashboard" routerLinkActive="active">
+            <ng-icon name="heroHome" class="text-base"></ng-icon>
+            Dashboard
+          </a>
+        </li>
+        <li *ngIf="isAdmin()">
+          <a routerLink="/customers" routerLinkActive="active">
+            <ng-icon name="heroUserGroup" class="text-base"></ng-icon>
+            Clientes
+          </a>
+        </li>
+        <li>
+          <a routerLink="/credits" routerLinkActive="active">
+            <ng-icon name="heroBanknotes" class="text-base"></ng-icon>
+            Microcreditos
+          </a>
+        </li>
+        <li>
+          <a routerLink="/cash" routerLinkActive="active">
+            <ng-icon name="heroChartBar" class="text-base"></ng-icon>
+            Caja
+          </a>
+        </li>
+        <li *ngIf="isAdmin()">
+          <a routerLink="/reports" routerLinkActive="active">
+            <ng-icon name="heroCheckCircle" class="text-base"></ng-icon>
+            Reportes
+          </a>
+        </li>
+        <li *ngIf="isAdmin()">
+          <a routerLink="/users" routerLinkActive="active">
+            <ng-icon name="heroUserPlus" class="text-base"></ng-icon>
+            Usuarios
+          </a>
+        </li>
+      </ul>
+
+      <div class="divider my-4"></div>
+
+      <div class="card bg-base-200 border border-base-300" *ngIf="user()">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content rounded-full w-10">
+                {{ user()!.name.slice(0, 1).toUpperCase() }}
+              </div>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold">{{ user()!.name }}</p>
+              <span class="badge badge-outline badge-primary mt-1">{{ user()!.role }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" (click)="logout()" class="btn btn-outline btn-primary btn-sm w-full mt-4">
+        Cerrar sesion
+      </button>
+    </aside>
+  </div>
+
+  <app-toast></app-toast>
+</div>

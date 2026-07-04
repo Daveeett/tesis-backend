@@ -1,0 +1,102 @@
+<section class="mb-6">
+  <h1 class="text-2xl font-bold">Gestion de Usuarios</h1>
+  <p class="text-sm text-base-content/70">Control de acceso y creacion de cuentas operativas.</p>
+</section>
+
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_350px] gap-6 items-start">
+  <div class="card bg-base-100 shadow-sm border border-base-300">
+    <div class="card-body p-0">
+      <div class="flex items-center gap-2 px-5 py-4 border-b border-base-200">
+        <ng-icon name="heroShieldCheck" class="text-lg"></ng-icon>
+        <h2 class="text-sm font-bold uppercase tracking-widest">Matriz de Permisos</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>Modulo / Funcion</th>
+              <th class="text-center">Administrador</th>
+              <th class="text-center">Cajero (Operativo)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-sm font-semibold">Dashboard Principal</td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+            </tr>
+            <tr>
+              <td class="text-sm font-semibold">Apertura y Cierre de Caja</td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+            </tr>
+            <tr>
+              <td class="text-sm font-semibold">Generacion de Microcreditos</td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+            </tr>
+            <tr>
+              <td class="text-sm font-semibold">Directorio de Clientes</td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+              <td class="text-center"><ng-icon name="heroXMark" class="text-error text-lg"></ng-icon></td>
+            </tr>
+            <tr>
+              <td class="text-sm font-semibold">Exportacion de Reportes (PDF/Excel)</td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+              <td class="text-center"><ng-icon name="heroXMark" class="text-error text-lg"></ng-icon></td>
+            </tr>
+            <tr>
+              <td class="text-sm font-semibold">Gestion de Usuarios</td>
+              <td class="text-center"><ng-icon name="heroCheck" class="text-success text-lg"></ng-icon></td>
+              <td class="text-center"><ng-icon name="heroXMark" class="text-error text-lg"></ng-icon></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h2 class="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+        <ng-icon name="heroUserPlus" class="text-lg"></ng-icon>
+        Nuevo Cajero
+      </h2>
+
+      <div class="flex flex-col gap-4 mt-3">
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text text-xs font-bold uppercase tracking-widest">Nombre Completo</span>
+          </div>
+          <input type="text" [(ngModel)]="name" placeholder="Ej. Ana Perez" class="input input-bordered w-full" />
+        </label>
+
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text text-xs font-bold uppercase tracking-widest">Correo Operativo</span>
+          </div>
+          <input type="email" [(ngModel)]="email" placeholder="cajero@sistema.local" class="input input-bordered w-full font-mono" />
+        </label>
+
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text text-xs font-bold uppercase tracking-widest">Contrasena Temporal</span>
+          </div>
+          <input type="password" [(ngModel)]="password" placeholder="Minimo 6 caracteres" class="input input-bordered w-full font-mono" />
+        </label>
+
+        <button (click)="createCajero()" [disabled]="loading()" class="btn btn-primary w-full">
+          <ng-icon name="heroCheckCircle" *ngIf="!loading()"></ng-icon>
+          <ng-icon name="heroArrowPath" class="animate-spin" *ngIf="loading()"></ng-icon>
+          {{ loading() ? 'Procesando...' : 'Registrar Cajero' }}
+        </button>
+
+        <div class="alert" [ngClass]="success() ? 'alert-success' : 'alert-error'" *ngIf="message()">
+          <ng-icon [name]="success() ? 'heroCheckCircle' : 'heroExclamationCircle'" class="text-base"></ng-icon>
+          <span class="text-xs font-bold">{{ message() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

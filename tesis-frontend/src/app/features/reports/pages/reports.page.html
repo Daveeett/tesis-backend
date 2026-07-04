@@ -1,0 +1,59 @@
+<section class="mb-6">
+  <h1 class="text-2xl font-bold">Exportacion de Datos</h1>
+  <p class="text-sm text-base-content/70">Generacion de reportes de cartera y contabilidad.</p>
+</section>
+
+<div class="card bg-base-100 shadow-sm border border-base-300 max-w-4xl">
+  <div class="card-body p-0">
+    <div class="flex items-center gap-3 px-6 py-4 border-b border-base-200">
+      <ng-icon name="heroDocumentChartBar" class="text-primary text-xl"></ng-icon>
+      <h2 class="text-sm font-bold uppercase tracking-widest">Reportes Disponibles</h2>
+    </div>
+
+    <div class="divide-y divide-base-200">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-box bg-error/10 text-error grid place-items-center text-xl">
+            <ng-icon name="heroDocumentText"></ng-icon>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold">Estado de Cartera Consolidado</h3>
+            <p class="text-xs text-base-content/70 mt-1 max-w-md">Reporte PDF con diseno corporativo listo para impresion. Incluye saldos pendientes, totales por cliente y resumen de estado de mora.</p>
+            <div class="flex gap-2 mt-2">
+              <span class="badge badge-outline badge-sm">Formato: PDF</span>
+              <span class="badge badge-outline badge-sm">Frecuencia: Diario</span>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="downloadReceivables()" [disabled]="downloading" class="btn btn-outline btn-sm">
+          <ng-icon name="heroArrowDownTray" class="text-error" *ngIf="!downloading"></ng-icon>
+          <ng-icon name="heroArrowPath" class="text-error animate-spin" *ngIf="downloading"></ng-icon>
+          {{ downloading ? 'Procesando...' : 'Exportar PDF' }}
+        </button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-box bg-success/10 text-success grid place-items-center text-xl">
+            <ng-icon name="heroTableCells"></ng-icon>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold">Matriz de Datos para Contabilidad</h3>
+            <p class="text-xs text-base-content/70 mt-1 max-w-md">Base de datos plana con la cartera activa. Ideal para cruces de informacion, metricas personalizadas y conciliaciones.</p>
+            <div class="flex gap-2 mt-2">
+              <span class="badge badge-outline badge-sm">Formato: XLSX</span>
+              <span class="badge badge-outline badge-sm">Data: Cruda</span>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="downloadExcel()" [disabled]="downloadingExcel" class="btn btn-outline btn-sm">
+          <ng-icon name="heroArrowDownTray" class="text-success" *ngIf="!downloadingExcel"></ng-icon>
+          <ng-icon name="heroArrowPath" class="text-success animate-spin" *ngIf="downloadingExcel"></ng-icon>
+          {{ downloadingExcel ? 'Procesando...' : 'Exportar Excel' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

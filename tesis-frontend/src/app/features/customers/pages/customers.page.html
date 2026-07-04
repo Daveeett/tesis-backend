@@ -1,0 +1,109 @@
+<section class="mb-6">
+  <h1 class="text-2xl font-bold">Directorio de Clientes</h1>
+  <p class="text-sm text-base-content/70">Gestion y estado operativo</p>
+</section>
+
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body p-0">
+      <div class="flex items-center justify-between p-5 border-b border-base-200">
+        <h2 class="text-sm font-bold uppercase tracking-widest">Registrados</h2>
+        <span class="badge badge-outline">{{ customers().length }} total</span>
+      </div>
+
+      <div class="overflow-x-auto max-h-[600px]">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Documento</th>
+              <th class="text-right">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let customer of customers()">
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar placeholder">
+                    <div class="bg-primary/10 text-primary rounded-full w-9">
+                      {{ customer.fullName.charAt(0).toUpperCase() }}
+                    </div>
+                  </div>
+                  <div>
+                    <div class="font-semibold">{{ customer.fullName }}</div>
+                    <div class="text-xs text-base-content/60">{{ customer.phone }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="font-mono text-sm">
+                {{ customer.docType }} - {{ customer.docNumber }}
+              </td>
+              <td class="text-right">
+                <app-semaphore-badge [status]="customer.semaphore?.status ?? 'GREEN'"></app-semaphore-badge>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="customers().length === 0" class="p-8 text-center text-sm text-base-content/60">
+        No hay clientes registrados aun.
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h2 class="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+        <ng-icon name="heroPlus" class="text-lg"></ng-icon>
+        Nuevo Cliente
+      </h2>
+      <form [formGroup]="form" (ngSubmit)="createCustomer()" class="flex flex-col gap-4 mt-3">
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text text-xs font-bold uppercase tracking-widest">Nombre Completo</span>
+          </div>
+          <input formControlName="fullName" class="input input-bordered w-full" placeholder="Ej. Maria Garcia" />
+        </label>
+
+        <div class="grid grid-cols-3 gap-3">
+          <label class="form-control col-span-1">
+            <div class="label">
+              <span class="label-text text-xs font-bold uppercase tracking-widest">Tipo</span>
+            </div>
+            <select formControlName="docType" class="select select-bordered w-full">
+              <option value="CI">CI</option>
+              <option value="RUC">RUC</option>
+              <option value="PASSPORT">PASSPORT</option>
+            </select>
+          </label>
+          <label class="form-control col-span-2">
+            <div class="label">
+              <span class="label-text text-xs font-bold uppercase tracking-widest">Documento</span>
+            </div>
+            <input formControlName="docNumber" class="input input-bordered w-full font-mono" placeholder="1700000000" />
+          </label>
+        </div>
+
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text text-xs font-bold uppercase tracking-widest">Telefono</span>
+          </div>
+          <input formControlName="phone" class="input input-bordered w-full font-mono" placeholder="0999999999" />
+        </label>
+
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text text-xs font-bold uppercase tracking-widest">Email (Opcional)</span>
+          </div>
+          <input formControlName="email" type="email" class="input input-bordered w-full" placeholder="correo@ejemplo.com" />
+        </label>
+
+        <button type="submit" [disabled]="form.invalid" class="btn btn-primary w-full">
+          <ng-icon name="heroCheckCircle"></ng-icon>
+          Guardar Registro
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
