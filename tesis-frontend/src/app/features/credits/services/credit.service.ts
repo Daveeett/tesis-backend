@@ -15,8 +15,11 @@ export class CreditService {
 
   createCredit(customerId: string, payload: { amount: number; dueDate: string; email: string }) {
     return this.http.post<ApiResponse<any>>(
-      `${environment.apiBaseUrl}/credits/customer/${customerId}`,
-      payload,
+      `${environment.apiBaseUrl}/credits`,
+      {
+        customerId,
+        ...payload,
+      },
     );
   }
 

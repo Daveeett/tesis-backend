@@ -1,3 +1,4 @@
+
 import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -91,10 +92,10 @@ export class CashPage implements OnInit {
   }
 
   openCash() {
-       this.cashService.openCash(this.openingBalance).subscribe({
+    this.cashService.openCash(this.openingBalance).subscribe({
       next: () => {
-        this.toast.success('Caja abierta exitosamente.');
         this.openingBalance = 0;
+        this.toast.success('Caja abierta exitosamente.');
         this.checkSession();
         this.loadHistory();
       },
@@ -102,34 +103,39 @@ export class CashPage implements OnInit {
     });
   }
 
-   addMovement() {
-     this.cashService
-       .addCashMovement({
-         movementType: this.movementType,
-         amount: this.movementAmount,
-         concept: this.movementConcept,
-       })
-       .subscribe({
-         next: () => {
-           const typeLabel = this.movementType === 'INCOME' ? 'Ingreso' : 'Egreso';
-           this.toast.success(`${typeLabel} registrado: $${this.movementAmount}`);
-           this.movementAmount = 0;
-           this.movementConcept = '';
-           this.checkSession();
-         },
-         error: (e: Error) => this.toast.error(e.message),
-       });
-   }
+  addMovement() {
+    this.cashService
+      .addCashMovement({
+        movementType: this.movementType,
+        amount: this.movementAmount,
+        concept: this.movementConcept,
+      })
+      .subscribe({
+        next: () => {
+          const typeLabel = this.movementType === 'INCOME' ? 'Ingreso' : 'Egreso';
+          const amountSaved = this.movementAmount;
 
-   closeCash() {
-     this.cashService.closeCash(this.closingBalance).subscribe({
-       next: () => {
-         this.toast.success('Caja cerrada correctamente. Que tengas buen día!');
-         this.closingBalance = 0;
-         this.checkSession();
-         this.loadHistory();
-       },
-       error: (e: Error) => this.toast.error(e.message),
-     });
-   }
+          this.movementAmount = 0;
+          this.movementConcept = '';
+
+          this.toast.success(`${typeLabel} registrado: $${amountSaved}`);
+
+          this.checkSession();
+          this.loadHistory();
+        },
+        error: (e: Error) => this.toast.error(e.message),
+      });
+  }
+
+  closeCash() {
+    this.cashService.closeCash(this.closingBalance).subscribe({
+      next: () => {
+        this.closingBalance = 0;
+        this.toast.success('Caja cerrada correctamente. Que tengas buen día!');
+        this.checkSession();
+        this.loadHistory();
+      },
+      error: (e: Error) => this.toast.error(e.message),
+    });
+  }
 }

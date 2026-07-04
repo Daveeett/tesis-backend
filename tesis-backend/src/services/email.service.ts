@@ -24,6 +24,9 @@ export class EmailService {
         user: env.EMAIL_USER || process.env["EMAIL_USER"],
         pass: env.EMAIL_PASS || process.env["EMAIL_PASS"],
       },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
   }
 
@@ -94,6 +97,9 @@ export class EmailService {
             port: 587,
             secure: false,
             auth: { user: testAccount.user, pass: testAccount.pass },
+            tls: {
+              rejectUnauthorized: false,
+            },
           });
           const info = await testTransporter.sendMail({
             from: '"Mini Market Test" <test@ethereal.email>',
