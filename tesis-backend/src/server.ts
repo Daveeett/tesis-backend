@@ -1,5 +1,5 @@
 import { AppDataSource } from "./config/data-source";
-import { env } from "./config/environment";
+import { config } from "./config/environment";
 import { createApp } from "./app";
 import { seedAdmin } from "./services/seed.service";
 import { startOverdueJob } from "./jobs/overdue-check.job";
@@ -11,9 +11,9 @@ const bootstrap = async (): Promise<void> => {
 
   const app = createApp();
 
-  app.listen(env.PORT, () => {
+  app.listen(config.server.port, () => {
     // eslint-disable-next-line no-console
-    console.log(`Server listening on port ${env.PORT}`);
+    console.log(`Server listening on port ${config.server.port}`);
   });
 };
 

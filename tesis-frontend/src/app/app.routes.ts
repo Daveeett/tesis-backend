@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './features/auth/guards/auth.guard';
+import { adminGuard } from './features/auth/guards/admin.guard';
 import { LayoutShellComponent } from './shared/components/layout-shell/layout-shell.component';
 
 export const routes: Routes = [
@@ -29,6 +30,7 @@ export const routes: Routes = [
 			},
 			{
 				path: 'customers',
+				canActivate: [adminGuard],
 				loadComponent: () =>
 					import('./features/customers/pages/customers.page').then(
 						(m) => m.CustomersPage,
@@ -45,11 +47,13 @@ export const routes: Routes = [
 			},
 			{
 				path: 'reports',
+				canActivate: [adminGuard],
 				loadComponent: () =>
 					import('./features/reports/pages/reports.page').then((m) => m.ReportsPage),
 			},
 			{
 				path: 'users',
+				canActivate: [adminGuard],
 				loadComponent: () =>
 					import('./features/users/pages/users.page').then((m) => m.UsersPage),
 			},

@@ -4,7 +4,7 @@ import cors from "cors";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import swaggerUi from "swagger-ui-express";
-import { env } from "./config/environment";
+import { config } from "./config/environment";
 import { router } from "./routes";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
@@ -15,7 +15,7 @@ export const createApp = () => {
   app.use(helmet());
   app.use(
     cors({
-      origin: env.FRONTEND_BASE_URL,
+      origin: config.server.frontendBaseUrl,
     }),
   );
   app.use(compression());

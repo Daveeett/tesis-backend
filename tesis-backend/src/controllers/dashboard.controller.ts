@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { DashboardService } from "../services/dashboard.service";
 import { ok } from "../utils/response.util";
+import { DashboardService } from "../services/dashboard.service";
 
 class DashboardController {
   private readonly dashboardService = new DashboardService();

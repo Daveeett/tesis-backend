@@ -7,128 +7,149 @@
   <div class="flex flex-col gap-4">
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body gap-4">
-        <label class="form-control">
+        <label for="credit-customer-select" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Seleccionar Cliente Operativo</span>
           </div>
           <div class="relative">
             <ng-icon name="heroUser" class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50"></ng-icon>
-            <select [(ngModel)]="selectedCustomerId" (change)="loadCredits()" class="select select-bordered w-full pl-10">
+            <select id="credit-customer-select" [(ngModel)]="selectedCustomerId" (change)="loadCredits()" class="select select-bordered w-full pl-10">
               <option [ngValue]="''">-- Seleccionar --</option>
-              <option *ngFor="let c of customers()" [ngValue]="c.id">{{ c.fullName }}</option>
+              @for (c of customers(); track c.id) {
+                <option [ngValue]="c.id">{{ c.fullName }}</option>
+              }
             </select>
           </div>
         </label>
 
-        <div class="flex items-center justify-between" *ngIf="semaphore()">
-          <span class="text-xs font-bold uppercase tracking-widest text-base-content/60">Estado</span>
-          <app-semaphore-badge [status]="semaphore()!"></app-semaphore-badge>
+        @if (semaphore()) {
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-widest text-base-content/60">Estado</span>
+            <app-semaphore-badge [status]="semaphore()!"></app-semaphore-badge>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (semaphore() === 'RED') {
+      <div class="alert alert-error">
+        <ng-icon name="heroNoSymbol" class="text-xl"></ng-icon>
+        <div>
+          <h4 class="font-bold">Operacion bloqueada</h4>
+          <p class="text-sm">El cliente mantiene mora activa.</p>
         </div>
       </div>
-    </div>
+    }
 
-    <div class="alert alert-error" *ngIf="semaphore() === 'RED'">
-      <ng-icon name="heroNoSymbol" class="text-xl"></ng-icon>
-      <div>
-        <h4 class="font-bold">Operacion bloqueada</h4>
-        <p class="text-sm">El cliente mantiene mora activa.</p>
-      </div>
-    </div>
+    @if (selectedCustomerId && semaphore() !== 'RED') {
+      <div class="card bg-base-100 border border-base-300 shadow-sm">
+        <div class="card-body gap-4">
+          <h2 class="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <ng-icon name="heroCurrencyDollar" class="text-lg"></ng-icon>
+            Nuevo Credito
+          </h2>
 
-    <div class="card bg-base-100 border border-base-300 shadow-sm" *ngIf="selectedCustomerId && semaphore() !== 'RED'">
-      <div class="card-body gap-4">
-        <h2 class="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-          <ng-icon name="heroCurrencyDollar" class="text-lg"></ng-icon>
-          Nuevo Credito
-        </h2>
+          <label for="credit-amount" class="form-control">
+            <div class="label">
+              <span class="label-text text-xs font-bold uppercase tracking-widest">Monto</span>
+            </div>
+            <input id="credit-amount" type="number" [(ngModel)]="newCreditAmount" class="input input-bordered w-full" placeholder="0.00" />
+          </label>
 
-        <label class="form-control">
-          <div class="label">
-            <span class="label-text text-xs font-bold uppercase tracking-widest">Monto</span>
-          </div>
-          <input type="number" [(ngModel)]="newCreditAmount" class="input input-bordered w-full" placeholder="0.00" />
-        </label>
+          <label for="credit-dueDate" class="form-control">
+            <div class="label">
+              <span class="label-text text-xs font-bold uppercase tracking-widest">Vencimiento</span>
+            </div>
+            <input id="credit-dueDate" type="date" [(ngModel)]="newCreditDueDate" class="input input-bordered w-full" />
+          </label>
 
-        <label class="form-control">
-          <div class="label">
-            <span class="label-text text-xs font-bold uppercase tracking-widest">Vencimiento</span>
-          </div>
-          <input type="date" [(ngModel)]="newCreditDueDate" class="input input-bordered w-full" />
-        </label>
+          <label for="credit-email" class="form-control">
+            <div class="label">
+              <span class="label-text text-xs font-bold uppercase tracking-widest">Notificacion Email</span>
+            </div>
+            <input id="credit-email" type="email" [(ngModel)]="newCreditEmail" class="input input-bordered w-full" placeholder="opcional@correo.com" />
+          </label>
 
-        <label class="form-control">
-          <div class="label">
-            <span class="label-text text-xs font-bold uppercase tracking-widest">Notificacion Email</span>
-          </div>
-          <input type="email" [(ngModel)]="newCreditEmail" class="input input-bordered w-full" placeholder="opcional@correo.com" />
-        </label>
+          <button (click)="submitCredit()" [disabled]="isCreating()" class="btn btn-primary w-full">
+            <ng-icon name="heroCheckCircle"></ng-icon>
+            {{ isCreating() ? 'Procesando...' : 'Aprobar Credito' }}
+          </button>
 
-        <button (click)="submitCredit()" [disabled]="isCreating()" class="btn btn-primary w-full">
-          <ng-icon name="heroCheckCircle"></ng-icon>
-          {{ isCreating() ? 'Procesando...' : 'Aprobar Credito' }}
-        </button>
-
-        <div class="text-xs font-semibold" *ngIf="createMessage()">
-          <span class="text-success" *ngIf="createMessage().includes('exitosamente')">{{ createMessage() }}</span>
-          <span class="text-error" *ngIf="!createMessage().includes('exitosamente')">{{ createMessage() }}</span>
+          @if (createMessage()) {
+            <div class="text-xs font-semibold">
+              @if (createMessage().includes('exitosamente')) {
+                <span class="text-success">{{ createMessage() }}</span>
+              } @else {
+                <span class="text-error">{{ createMessage() }}</span>
+              }
+            </div>
+          }
         </div>
       </div>
-    </div>
+    }
   </div>
 
   <div class="flex flex-col gap-4">
-    <div class="card bg-base-100 border border-base-300 shadow-sm" *ngIf="waLink()">
-      <div class="card-body flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 class="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            <ng-icon name="heroChatBubbleLeftEllipsis" class="text-lg"></ng-icon>
-            Enlace Generado
-          </h3>
-          <p class="text-xs text-base-content/60 truncate max-w-sm">{{ waMessage() }}</p>
-        </div>
-        <a [href]="waLink()" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Abrir WhatsApp</a>
-      </div>
-    </div>
-
-    <div class="card bg-base-100 shadow-sm" *ngIf="credits().length > 0">
-      <div class="card-body p-0">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b border-base-200">
-          <h2 class="text-sm font-bold uppercase tracking-widest">Historial Activo</h2>
-          <button (click)="sendGeneralReminder()" class="btn btn-outline btn-sm">
-            <ng-icon name="heroBellAlert"></ng-icon>
-            Notificar Saldo
-          </button>
-        </div>
-
-        <div class="divide-y divide-base-200">
-          <article *ngFor="let credit of credits()" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5">
-            <div class="flex flex-col gap-1.5">
-              <div class="flex items-center gap-2">
-                <span class="badge badge-outline badge-sm">ID: {{ credit.id.slice(0, 8) }}</span>
-                <span class="badge badge-sm" [ngClass]="credit.status === 'PAID' ? 'badge-success' : (credit.status === 'OVERDUE' ? 'badge-error' : 'badge-info')">
-                  {{ credit.status }}
-                </span>
-              </div>
-              <span class="text-xs text-base-content/70 flex items-center gap-1">
-                <ng-icon name="heroCalendarDays" class="text-base-content/50"></ng-icon>
-                Vence: <strong class="text-base-content">{{ credit.dueDate | date: 'dd/MM/yyyy' }}</strong>
-              </span>
-            </div>
-            <div class="text-left sm:text-right">
-              <span class="block text-xl font-mono font-bold text-primary">${{ credit.amount }}</span>
-            </div>
-          </article>
+    @if (waLink()) {
+      <div class="card bg-base-100 border border-base-300 shadow-sm">
+        <div class="card-body flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <ng-icon name="heroChatBubbleLeftEllipsis" class="text-lg"></ng-icon>
+              Enlace Generado
+            </h3>
+            <p class="text-xs text-base-content/60 truncate max-w-sm">{{ waMessage() }}</p>
+          </div>
+          <a [href]="waLink()" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Abrir WhatsApp</a>
         </div>
       </div>
-    </div>
+    }
 
-    <div class="card bg-base-100 border border-base-300 shadow-sm text-center" *ngIf="selectedCustomerId && credits().length === 0">
-      <div class="card-body">
-        <div class="w-12 h-12 rounded-full bg-base-200 text-base-content/50 grid place-items-center text-xl mx-auto mb-2">
-          <ng-icon name="heroInbox"></ng-icon>
+    @if (credits().length > 0) {
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body p-0">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b border-base-200">
+            <h2 class="text-sm font-bold uppercase tracking-widest">Historial Activo</h2>
+            <button (click)="sendGeneralReminder()" class="btn btn-outline btn-sm">
+              <ng-icon name="heroBellAlert"></ng-icon>
+              Notificar Saldo
+            </button>
+          </div>
+
+          <div class="divide-y divide-base-200">
+            @for (credit of credits(); track credit.id) {
+              <article class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5">
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-outline badge-sm">ID: {{ credit.id.slice(0, 8) }}</span>
+                    <span class="badge badge-sm" [ngClass]="credit.status === 'PAID' ? 'badge-success' : (credit.status === 'OVERDUE' ? 'badge-error' : 'badge-info')">
+                      {{ credit.status }}
+                    </span>
+                  </div>
+                  <span class="text-xs text-base-content/70 flex items-center gap-1">
+                    <ng-icon name="heroCalendarDays" class="text-base-content/50"></ng-icon>
+                    Vence: <strong class="text-base-content">{{ credit.dueDate | date: 'dd/MM/yyyy' }}</strong>
+                  </span>
+                </div>
+                <div class="text-left sm:text-right">
+                  <span class="block text-xl font-mono font-bold text-primary">${{ credit.amount }}</span>
+                </div>
+              </article>
+            }
+          </div>
         </div>
-        <p class="text-sm text-base-content/70">El cliente no tiene creditos activos.</p>
       </div>
-    </div>
+    }
+
+    @if (selectedCustomerId && credits().length === 0) {
+      <div class="card bg-base-100 border border-base-300 shadow-sm text-center">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-full bg-base-200 text-base-content/50 grid place-items-center text-xl mx-auto mb-2">
+            <ng-icon name="heroInbox"></ng-icon>
+          </div>
+          <p class="text-sm text-base-content/70">El cliente no tiene creditos activos.</p>
+        </div>
+      </div>
+    }
   </div>
 </div>

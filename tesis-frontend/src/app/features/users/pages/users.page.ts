@@ -1,16 +1,18 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, DestroyRef, inject, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { NgClass } from '@angular/common';
 import { NgIconComponent } from '@ng-icons/core';
-import { AuthService } from '../../auth/services/auth.service';
+import { UserService } from '../services/user.service';
 
 @Component({
     selector: 'app-users-page',
-    imports: [CommonModule, FormsModule, NgIconComponent],
+    imports: [FormsModule, NgClass, NgIconComponent],
     templateUrl: './users.page.html',
-    styleUrl: './users.page.scss'
+    styleUrl: './users.page.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UsersPage implements OnInit {
+export class UsersPage {
   name = '';
   email = '';
   password = '';
@@ -18,11 +20,11 @@ export class UsersPage implements OnInit {
   readonly message = signal('');
   readonly success = signal(false);
 
-  constructor(private readonly authService: AuthService) {}
+  private readonly destroyRef = inject(DestroyRef);
 
-  ngOnInit() {}
+  constructor(private readonly userService: UserService) {}
 
-  createCajero() {
+  createCajero(): void {
     if (!this.name || !this.email || !this.password) {
       this.message.set('Por favor completa todos los campos.');
       this.success.set(false);
@@ -32,20 +34,22 @@ export class UsersPage implements OnInit {
     this.loading.set(true);
     this.message.set('');
 
-    this.authService.createCajero({ name: this.name, email: this.email, password: this.password }).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.success.set(true);
-        this.message.set(`Cajero "${this.name}" creado exitosamente.`);
-        this.name = '';
-        this.email = '';
-        this.password = '';
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.success.set(false);
-        this.message.set(err.error?.message || 'Error al crear el cajero.');
-      }
-    });
+    this.userService.createCajero({ name: this.name, email: this.email, password: this.password })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.success.set(true);
+          this.message.set(`Cajero "${this.name}" creado exitosamente.`);
+          this.name = '';
+          this.email = '';
+          this.password = '';
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.success.set(false);
+          this.message.set(err.error?.message || 'Error al crear el cajero.');
+        }
+      });
   }
 }

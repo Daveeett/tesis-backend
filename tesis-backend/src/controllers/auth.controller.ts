@@ -1,18 +1,9 @@
 import { Request, Response } from "express";
-import { z } from "zod";
 import { AuthService } from "../services/auth.service";
 import { ok } from "../utils/response.util";
+import { loginSchema, cajeroSchema } from "../entities/constants/auth.constants";
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
 
-const cajeroSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
-});
 
 class AuthController {
   private readonly authService = new AuthService();

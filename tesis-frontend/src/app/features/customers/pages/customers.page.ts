@@ -1,27 +1,30 @@
-import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, DestroyRef, inject, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CustomerService } from '../services/customer.service';
-import { Customer } from '.././models/customer.model';
-import { SemaphoreBadgeComponent } from '../../../shared/components/semaphore-badge/semaphore-badge.component';
+import { Customer } from '../models/customer.model';
+import { SemaphoreBadgeComponent } from '@shared/components/semaphore-badge/semaphore-badge.component';
 import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-customers-page',
-    imports: [CommonModule, ReactiveFormsModule, SemaphoreBadgeComponent, NgIconComponent],
+    imports: [ReactiveFormsModule, SemaphoreBadgeComponent, NgIconComponent],
     templateUrl: './customers.page.html',
-    styleUrl: './customers.page.scss'
+    styleUrl: './customers.page.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CustomersPage {
   readonly customers = signal<Customer[]>([]);
 
   readonly form = this.fb.group({
-    fullName: ['', [Validators.required]],
+    fullName: ['', [Validators.required, Validators.pattern(/^[a-zA-ZÀ-ÿ\s]+$/)]],
     docType: ['CI', [Validators.required]],
-    docNumber: ['', [Validators.required]],
-    phone: ['', [Validators.required]],
-    email: [''],
+    docNumber: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+    email: ['', [Validators.email]],
   });
+
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private readonly fb: FormBuilder,
@@ -30,7 +33,7 @@ export class CustomersPage {
     this.loadCustomers();
   }
 
-  createCustomer() {
+  createCustomer(): void {
     if (this.form.invalid) {
       return;
     }
@@ -44,24 +47,28 @@ export class CustomersPage {
       email: raw.email ?? '',
     };
 
-     this.customerService.createCustomer(payload).subscribe({
-      next: () => {
-        this.form.reset({
-          fullName: '',
-          docType: 'CI',
-          docNumber: '',
-          phone: '',
-          email: '',
-        });
-        this.loadCustomers();
-      },
-    });
+     this.customerService.createCustomer(payload)
+       .pipe(takeUntilDestroyed(this.destroyRef))
+       .subscribe({
+         next: () => {
+           this.form.reset({
+             fullName: '',
+             docType: 'CI',
+             docNumber: '',
+             phone: '',
+             email: '',
+           });
+           this.loadCustomers();
+         },
+       });
   }
 
-  private loadCustomers() {
-     this.customerService.getCustomers().subscribe({
-      next: (response) => this.customers.set(response.data),
-      error: () => this.customers.set([]),
-    });
+  private loadCustomers(): void {
+     this.customerService.getCustomers()
+       .pipe(takeUntilDestroyed(this.destroyRef))
+       .subscribe({
+         next: (response) => this.customers.set(response.data),
+         error: () => this.customers.set([]),
+       });
   }
 }

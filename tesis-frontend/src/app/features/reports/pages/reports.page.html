@@ -26,10 +26,13 @@
           </div>
         </div>
 
-        <button (click)="downloadReceivables()" [disabled]="downloading" class="btn btn-outline btn-sm">
-          <ng-icon name="heroArrowDownTray" class="text-error" *ngIf="!downloading"></ng-icon>
-          <ng-icon name="heroArrowPath" class="text-error animate-spin" *ngIf="downloading"></ng-icon>
-          {{ downloading ? 'Procesando...' : 'Exportar PDF' }}
+        <button (click)="downloadReceivables()" [disabled]="downloading()" class="btn btn-outline btn-sm">
+          @if (!downloading()) {
+            <ng-icon name="heroArrowDownTray" class="text-error"></ng-icon>
+          } @else {
+            <ng-icon name="heroArrowPath" class="text-error animate-spin"></ng-icon>
+          }
+          {{ downloading() ? 'Procesando...' : 'Exportar PDF' }}
         </button>
       </div>
 
@@ -48,10 +51,13 @@
           </div>
         </div>
 
-        <button (click)="downloadExcel()" [disabled]="downloadingExcel" class="btn btn-outline btn-sm">
-          <ng-icon name="heroArrowDownTray" class="text-success" *ngIf="!downloadingExcel"></ng-icon>
-          <ng-icon name="heroArrowPath" class="text-success animate-spin" *ngIf="downloadingExcel"></ng-icon>
-          {{ downloadingExcel ? 'Procesando...' : 'Exportar Excel' }}
+        <button (click)="downloadExcel()" [disabled]="downloadingExcel()" class="btn btn-outline btn-sm">
+          @if (!downloadingExcel()) {
+            <ng-icon name="heroArrowDownTray" class="text-success"></ng-icon>
+          } @else {
+            <ng-icon name="heroArrowPath" class="text-success animate-spin"></ng-icon>
+          }
+          {{ downloadingExcel() ? 'Procesando...' : 'Exportar Excel' }}
         </button>
       </div>
     </div>

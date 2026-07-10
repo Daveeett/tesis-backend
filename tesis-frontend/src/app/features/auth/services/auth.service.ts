@@ -1,8 +1,9 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { tap } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../shared/models/api.models';
+import { environment } from '@env';
+import { ApiResponse } from '@shared/models/api.models';
 
 interface LoginPayload {
   email: string;
@@ -16,7 +17,7 @@ export interface AuthUser {
   role: 'ADMIN' | 'CAJERO';
 }
 
-interface LoginData {
+export interface LoginData {
   token: string;
   user: AuthUser;
 }
@@ -27,6 +28,7 @@ export class AuthService {
   private readonly userKey = 'mmu_user';
   private readonly userSignal = signal<AuthUser | null>(this.loadUser());
   private readonly authSignal = computed(() => !!this.userSignal());
+  private readonly router = inject(Router);
 
   constructor(private readonly http: HttpClient) {}
 
@@ -38,7 +40,7 @@ export class AuthService {
     return this.userSignal.asReadonly();
   }
 
-  isAdmin() {
+  isAdmin(): boolean {
     return this.userSignal()?.role === 'ADMIN';
   }
 
@@ -58,41 +60,42 @@ export class AuthService {
       );
   }
 
-  logout() {
+  logout(): void {
     const token = this.getToken();
     const clearStorage = () => {
       localStorage.removeItem(this.tokenKey);
       localStorage.removeItem(this.userKey);
       this.userSignal.set(null);
-      window.location.href = '/login'; // Full reload to clear app state
+      void this.router.navigateByUrl('/login');
     };
 
     if (token) {
       this.http.post(`${environment.apiBaseUrl}/auth/logout`, {}).subscribe({
         next: () => clearStorage(),
-        error: () => clearStorage()
+        error: () => clearStorage(),
       });
     } else {
       clearStorage();
     }
   }
 
-
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }
 
-  createCajero(payload: { name: string; email: string; password: string }) {
-    return this.http.post<ApiResponse<AuthUser>>(
-      `${environment.apiBaseUrl}/auth/users`,
-      payload,
-    );
-  }
-
   private loadUser(): AuthUser | null {
     if (typeof window === 'undefined') return null;
-    const raw = localStorage.getItem(this.userKey);
-    return raw ? JSON.parse(raw) : null;
+    try {
+      const raw = localStorage.getItem(this.userKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.id && parsed.email && parsed.role) {
+        return parsed as AuthUser;
+      }
+      return null;
+    } catch {
+      localStorage.removeItem(this.userKey);
+      return null;
+    }
   }
 }
-

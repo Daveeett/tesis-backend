@@ -1,14 +1,7 @@
 import { Request, Response } from "express";
-import { z } from "zod";
 import { ProductService } from "../services/product.service";
 import { ok } from "../utils/response.util";
-
-const createSchema = z.object({
-  sku: z.string().min(1),
-  name: z.string().min(2),
-  unitPrice: z.coerce.number().positive(),
-  stock: z.coerce.number().int().min(0),
-});
+import { createSchema } from "../entities/constants/product.constants";
 
 class ProductController {
   private readonly productService = new ProductService();

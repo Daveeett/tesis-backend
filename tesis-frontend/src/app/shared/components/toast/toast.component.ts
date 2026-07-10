@@ -1,34 +1,37 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ToastService } from '../../../shared/services/toast.service';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { ToastService } from '@shared/services/toast.service';
 import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-toast',
-    imports: [CommonModule, NgIconComponent],
+    imports: [NgClass, NgIconComponent],
     template: `
 <div class="toast toast-end toast-bottom z-50">
-  <div
-    *ngFor="let t of toast.toasts(); trackBy: trackById"
-    class="alert shadow-lg text-sm"
-    [ngClass]="alertClass(t.type)"
-  >
-    <ng-icon [name]="icons[t.type]" class="text-lg"></ng-icon>
-    <span class="font-semibold">{{ t.message }}</span>
-    <button type="button" class="btn btn-ghost btn-xs" (click)="toast.dismiss(t.id)">
-      <ng-icon name="heroXMark"></ng-icon>
-    </button>
-  </div>
+  @for (t of toast.toasts(); track t.id) {
+    <div
+      class="alert shadow-lg text-sm"
+      [ngClass]="alertClass(t.type)"
+      role="alert"
+    >
+      <ng-icon [name]="icons[t.type]" class="text-lg"></ng-icon>
+      <span class="font-semibold">{{ t.message }}</span>
+      <button type="button" class="btn btn-ghost btn-xs" (click)="toast.dismiss(t.id)" aria-label="Cerrar notificacion">
+        <ng-icon name="heroXMark"></ng-icon>
+      </button>
+    </div>
+  }
 </div>
   `,
-    styles: []
+    styles: [],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToastComponent {
-  readonly icons: Record<string, string> = { 
-    success: 'heroCheckCircle', 
-    error: 'heroExclamationCircle', 
-    warning: 'heroExclamationTriangle', 
-    info: 'heroBellAlert' 
+  readonly icons: Record<string, string> = {
+    success: 'heroCheckCircle',
+    error: 'heroExclamationCircle',
+    warning: 'heroExclamationTriangle',
+    info: 'heroBellAlert'
   };
 
   constructor(public readonly toast: ToastService) {}
@@ -41,6 +44,4 @@ export class ToastComponent {
       default: return 'alert-info';
     }
   }
-
-  trackById(_: number, t: { id: number }) { return t.id; }
 }

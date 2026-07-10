@@ -1,16 +1,8 @@
 import { Request, Response } from "express";
-import { z } from "zod";
 import { CustomerService } from "../services/customer.service";
 import { ok } from "../utils/response.util";
+import { createSchema } from "../entities/constants/customer.constants";
 
-const createSchema = z.object({
-  docType: z.string().min(1),
-  docNumber: z.string().min(1),
-  fullName: z.string().min(2),
-  phone: z.string().min(7),
-  email: z.union([z.string().email(), z.literal("")]).optional(),
-  address: z.string().optional(),
-});
 
 class CustomerController {
   private readonly customerService = new CustomerService();

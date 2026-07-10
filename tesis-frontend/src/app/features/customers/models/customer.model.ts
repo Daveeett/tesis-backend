@@ -1,3 +1,6 @@
+import { SemaphoreStatus } from '@shared/models/semaphore.model';
+
+export { SemaphoreStatus };
 
 export interface Customer {
   id: string;
@@ -12,4 +15,3 @@ export interface Customer {
     daysToDue?: number;
   };
 }
-export type SemaphoreStatus='GREEN'|'YELLOW'|'RED';

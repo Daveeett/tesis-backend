@@ -3,7 +3,7 @@
 
   <div class="drawer-content flex flex-col">
     <div class="navbar bg-base-100/90 border-b border-base-300 px-4 lg:hidden">
-      <label for="app-drawer" class="btn btn-ghost btn-square">
+      <label for="app-drawer" class="btn btn-ghost btn-square" aria-label="Abrir menu de navegacion">
         <ng-icon name="heroBars3" class="text-xl"></ng-icon>
       </label>
       <div class="flex items-center gap-2 font-semibold">
@@ -21,10 +21,7 @@
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-base-content/60">Operaciones</p>
             <h1 class="text-2xl font-semibold">Resumen operativo</h1>
           </div>
-          <div class="badge badge-outline badge-success gap-2">
-            <span class="inline-flex h-2 w-2 rounded-full bg-success"></span>
-            Sistema listo para operar
-          </div>
+
         </div>
         <router-outlet></router-outlet>
       </div>
@@ -32,7 +29,7 @@
   </div>
 
   <div class="drawer-side">
-    <label for="app-drawer" class="drawer-overlay"></label>
+    <label for="app-drawer" class="drawer-overlay" aria-label="Cerrar menu de navegacion"></label>
     <aside class="w-full bg-base-100 border-r border-base-300 px-4 py-5">
       <div class="flex items-center gap-3 mb-6">
         <span class="inline-flex h-10 w-10 items-center justify-center rounded-box bg-primary text-primary-content">
@@ -51,12 +48,14 @@
             Dashboard
           </a>
         </li>
-        <li *ngIf="isAdmin()">
-          <a routerLink="/customers" routerLinkActive="active">
-            <ng-icon name="heroUserGroup" class="text-base"></ng-icon>
-            Clientes
-          </a>
-        </li>
+        @if (isAdmin()) {
+          <li>
+            <a routerLink="/customers" routerLinkActive="active">
+              <ng-icon name="heroUserGroup" class="text-base"></ng-icon>
+              Clientes
+            </a>
+          </li>
+        }
         <li>
           <a routerLink="/credits" routerLinkActive="active">
             <ng-icon name="heroBanknotes" class="text-base"></ng-icon>
@@ -69,39 +68,43 @@
             Caja
           </a>
         </li>
-        <li *ngIf="isAdmin()">
-          <a routerLink="/reports" routerLinkActive="active">
-            <ng-icon name="heroCheckCircle" class="text-base"></ng-icon>
-            Reportes
-          </a>
-        </li>
-        <li *ngIf="isAdmin()">
-          <a routerLink="/users" routerLinkActive="active">
-            <ng-icon name="heroUserPlus" class="text-base"></ng-icon>
-            Usuarios
-          </a>
-        </li>
+        @if (isAdmin()) {
+          <li>
+            <a routerLink="/reports" routerLinkActive="active">
+              <ng-icon name="heroCheckCircle" class="text-base"></ng-icon>
+              Reportes
+            </a>
+          </li>
+          <li>
+            <a routerLink="/users" routerLinkActive="active">
+              <ng-icon name="heroUserPlus" class="text-base"></ng-icon>
+              Usuarios
+            </a>
+          </li>
+        }
       </ul>
 
       <div class="divider my-4"></div>
 
-      <div class="card bg-base-200 border border-base-300" *ngIf="user()">
-        <div class="card-body p-4">
-          <div class="flex items-center gap-3">
-            <div class="avatar placeholder">
-              <div class="bg-primary text-primary-content rounded-full w-10">
-                {{ user()!.name.slice(0, 1).toUpperCase() }}
+      @if (user()) {
+        <div class="card bg-base-200 border border-base-300">
+          <div class="card-body p-4">
+            <div class="flex items-center gap-3">
+              <div class="avatar placeholder">
+                <div class="bg-primary text-primary-content rounded-full w-10">
+                  {{ user()!.name.slice(0, 1).toUpperCase() }}
+                </div>
               </div>
-            </div>
-            <div class="min-w-0">
-              <p class="truncate text-sm font-semibold">{{ user()!.name }}</p>
-              <span class="badge badge-outline badge-primary mt-1">{{ user()!.role }}</span>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold">{{ user()!.name }}</p>
+                <span class="badge badge-outline badge-primary mt-1">{{ user()!.role }}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      }
 
-      <button type="button" (click)="logout()" class="btn btn-outline btn-primary btn-sm w-full mt-4">
+      <button type="button" (click)="logout()" class="btn btn-outline btn-primary btn-sm w-full mt-4" aria-label="Cerrar sesion">
         Cerrar sesion
       </button>
     </aside>

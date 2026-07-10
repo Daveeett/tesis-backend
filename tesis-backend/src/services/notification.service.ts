@@ -1,4 +1,4 @@
-import { env } from "../config/environment";
+import { config } from "../config/environment";
 import { NotificationChannel } from "../entities/enums/notification-channel.enum";
 import { NotificationStatus } from "../entities/enums/notification-status.enum";
 import { AppError } from "../utils/app-error.util";
@@ -19,7 +19,7 @@ export class NotificationService {
 
     const customer = credit.creditAccount.customer;
     const tokenResult = await this.statementService.generateTokenByCustomer(customer.id);
-    const statementUrl = `${env.FRONTEND_BASE_URL}/estado-cuenta/${tokenResult.token}`;
+    const statementUrl = `${config.server.frontendBaseUrl}/estado-cuenta/${tokenResult.token}`;
     const message = `Estimado cliente ${customer.fullName}, le recordamos cordialmente que tiene un valor pendiente de $${credit.amount} en el Mini Market Urbano. Revise su estado de cuenta aqui: ${statementUrl}`;
     const waLink = `https://wa.me/${customer.phone}?text=${encodeURIComponent(message)}`;
 
@@ -46,7 +46,7 @@ export class NotificationService {
     }
 
     const tokenResult = await this.statementService.generateTokenByCustomer(customer.id);
-    const statementUrl = `${env.FRONTEND_BASE_URL}/estado-cuenta/${tokenResult.token}`;
+    const statementUrl = `${config.server.frontendBaseUrl}/estado-cuenta/${tokenResult.token}`;
     const message = `Estimado cliente ${customer.fullName}, le recordamos cordialmente que tiene un valor pendiente total de $${account.currentBalance || account.totalDebt} en el Mini Market Urbano. Revise su estado de cuenta detallado aqui: ${statementUrl}`;
     const waLink = `https://wa.me/${customer.phone}?text=${encodeURIComponent(message)}`;
 

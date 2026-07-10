@@ -1,61 +1,67 @@
-<section class="max-w-4xl mx-auto my-8" *ngIf="statement() as data">
-  <div class="card bg-base-100 shadow-xl border border-base-300 overflow-hidden">
-    <div class="card-body p-0">
-      <header class="bg-primary text-primary-content px-8 py-10 text-center">
-        <h1 class="m-0 text-3xl font-extrabold">Estado de Cuenta Digital</h1>
-        <p class="mt-2 text-base-content/90">Cliente: <strong class="font-bold">{{ data.customer.name }}</strong></p>
-      </header>
+@if (statement(); as data) {
+  <section class="max-w-4xl mx-auto my-8">
+    <div class="card bg-base-100 shadow-xl border border-base-300 overflow-hidden">
+      <div class="card-body p-0">
+        <header class="bg-primary text-primary-content px-8 py-10 text-center">
+          <h1 class="m-0 text-3xl font-extrabold">Estado de Cuenta Digital</h1>
+          <p class="mt-2 text-base-content/90">Cliente: <strong class="font-bold">{{ data.customer.name }}</strong></p>
+        </header>
 
-      <div class="p-8 flex flex-col gap-8">
-        <div class="stats stats-vertical sm:stats-horizontal w-full bg-base-200 border border-base-300">
-          <div class="stat">
-            <div class="stat-title text-xs uppercase tracking-widest">Total Deuda</div>
-            <div class="stat-value text-primary">{{ '$' }}{{ data.totals.totalDebt }}</div>
-          </div>
-          <div class="stat">
-            <div class="stat-title text-xs uppercase tracking-widest">Abonos / Pagos</div>
-            <div class="stat-value text-primary">{{ '$' }}{{ data.totals.totalPaid }}</div>
-          </div>
-          <div class="stat">
-            <div class="stat-title text-xs uppercase tracking-widest">Saldo Pendiente</div>
-            <div class="stat-value text-error">{{ '$' }}{{ data.totals.pending }}</div>
-          </div>
-        </div>
-
-        <div>
-          <h2 class="text-xl font-bold mb-4">Detalle de Movimientos</h2>
-          <div class="flex flex-col gap-4">
-            <div *ngFor="let credit of data.credits" class="card bg-base-100 border border-base-300 shadow-sm">
-              <div class="card-body">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div class="flex items-center gap-2">
-                    <h3 class="m-0 text-lg font-bold">Credito {{ credit.id.slice(0, 8).toUpperCase() }}</h3>
-                    <span class="badge badge-outline">{{ credit.status }}</span>
-                  </div>
-                  <span class="text-sm text-base-content/70">Vence: {{ credit.dueDate | date: 'longDate' }}</span>
-                </div>
-                <div class="divider my-2"></div>
-                <table class="table table-sm">
-                  <tbody>
-                    <tr *ngFor="let item of credit.items">
-                      <td class="text-sm">{{ item.product.name }} (x{{ item.qty }})</td>
-                      <td class="text-sm font-mono text-right">{{ '$' }}{{ item.subtotal }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+        <div class="p-8 flex flex-col gap-8">
+          <div class="stats stats-vertical sm:stats-horizontal w-full bg-base-200 border border-base-300">
+            <div class="stat">
+              <div class="stat-title text-xs uppercase tracking-widest">Total Deuda</div>
+              <div class="stat-value text-primary">${{ data.totals.totalDebt }}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title text-xs uppercase tracking-widest">Abonos / Pagos</div>
+              <div class="stat-value text-primary">${{ data.totals.totalPaid }}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title text-xs uppercase tracking-widest">Saldo Pendiente</div>
+              <div class="stat-value text-error">${{ data.totals.pending }}</div>
             </div>
           </div>
-        </div>
 
-        <div class="card bg-primary text-primary-content shadow-lg">
-          <div class="card-body text-center">
-            <h3 class="m-0 mb-2 text-lg font-bold">Datos para Transferencia Directa</h3>
-            <p class="my-1">Banco Pichincha - Cuenta Ahorros 123456789</p>
-            <p class="my-1">Titular: Mini Market Urbano</p>
+          <div>
+            <h2 class="text-xl font-bold mb-4">Detalle de Movimientos</h2>
+            <div class="flex flex-col gap-4">
+              @for (credit of data.credits; track credit.id) {
+                <div class="card bg-base-100 border border-base-300 shadow-sm">
+                  <div class="card-body">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div class="flex items-center gap-2">
+                        <h3 class="m-0 text-lg font-bold">Credito {{ credit.id.slice(0, 8).toUpperCase() }}</h3>
+                        <span class="badge badge-outline">{{ credit.status }}</span>
+                      </div>
+                      <span class="text-sm text-base-content/70">Vence: {{ credit.dueDate | date: 'longDate' }}</span>
+                    </div>
+                    <div class="divider my-2"></div>
+                    <table class="table table-sm">
+                      <tbody>
+                        @for (item of credit.items; track $index) {
+                          <tr>
+                            <td class="text-sm">{{ item.product.name }} (x{{ item.qty }})</td>
+                            <td class="text-sm font-mono text-right">${{ item.subtotal }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="card bg-primary text-primary-content shadow-lg">
+            <div class="card-body text-center">
+              <h3 class="m-0 mb-2 text-lg font-bold">Datos para Transferencia Directa</h3>
+              <p class="my-1">Banco Pichincha - Cuenta Ahorros 123456789</p>
+              <p class="my-1">Titular: Mini Market Urbano</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+}

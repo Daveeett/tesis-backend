@@ -1,15 +1,15 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgIconComponent } from '@ng-icons/core';
-import { CommonModule } from '@angular/common';
 import { ToastComponent } from '../toast/toast.component';
-import { AuthService } from '../../../features/auth/services/auth.service';
+import { AuthService } from '@features/auth/services/auth.service';
 
 @Component({
     selector: 'app-layout-shell',
-    imports: [RouterOutlet, RouterLink, RouterLinkActive, NgIconComponent, CommonModule, ToastComponent],
+    imports: [RouterOutlet, RouterLink, RouterLinkActive, NgIconComponent, ToastComponent],
     templateUrl: './layout-shell.component.html',
-    styleUrl: './layout-shell.component.scss'
+    styleUrl: './layout-shell.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LayoutShellComponent {
   readonly user = this.authService.getCurrentUser();
@@ -17,10 +17,9 @@ export class LayoutShellComponent {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly router: Router,
   ) {}
 
-  logout() {
+  logout(): void {
     this.authService.logout();
   }
 }

@@ -1,0 +1,546 @@
+# 🔍 Auditoría Técnica — `tesis-front`
+
+> **Stack**: Angular 17.3 · Standalone Components · TailwindCSS 3 · @ng-icons · chart.js · PWA  
+> **Tipo de revisión**: Code Review de mentor — sugerencias priorizadas para mantenibilidad de tesis
+
+---
+
+## 1. Estructura de Módulos y Componentes
+
+### ✅ Lo que está bien
+
+| Aspecto | Veredicto |
+|---|---|
+| Feature-based folder structure (`features/auth`, `features/cash`, etc.) | **Excelente** — alineado con la guía oficial de Angular y escalable |
+| Separación `pages/` / `services/` / `models/` por feature | **Buena práctica** — facilita encontrar dónde vive cada pieza |
+| `shared/components/ui/` como sistema de componentes base | **Sólido** — patrón de Design System propio |
+| Todos los componentes son **standalone** | **Perfecto** para Angular 17+ |
+
+### ⚠️ Hallazgos y Sugerencias
+
+#### 1.1 — El `LayoutShellComponent` está importado pero no usado en las rutas
+
+En [app.routes.ts](file:///c:/Tesis-David/tesis-front/src/app/app.routes.ts), importas `LayoutShellComponent` en la línea 3, pero **nunca lo asignas como `component`** en la ruta padre (línea 18–56). Las rutas autenticadas deberían renderizarse **dentro** del layout:
+
+```typescript
+// Actualmente (línea 18):
+{ path: '', children: [...] }
+
+// Debería ser:
+{ path: '', component: LayoutShellComponent, canActivate: [authGuard], children: [...] }
+```
+
+**¿Por qué?** Sin esto, las rutas internas (dashboard, cash, credits…) se renderizan sin sidebar ni header. Además, el `authGuard` que importas en la línea 2 **nunca se aplica a ninguna ruta**. Esto es un **bug de seguridad crítico**: cualquier usuario puede acceder a `/dashboard`, `/credits`, etc. sin autenticarse.
+
+> [!CAUTION]
+> El guard `authGuard` se importa pero **no se usa en ninguna ruta**. Todas las rutas protegidas son accesibles sin login.
+
+#### 1.2 — Falta la carpeta `guards/` a nivel de `shared/` o del feature correcto
+
+El guard [auth.guard.ts](file:///c:/Tesis-David/tesis-front/src/app/features/auth/guards/auth.guard.ts) está dentro de `features/auth/guards/`, lo cual es correcto semánticamente. Sin embargo, como protege **todas** las rutas (no solo auth), tiene sentido moverlo a `shared/guards/` o a `core/guards/`. El guard es un servicio transversal, no una pieza exclusiva del feature "auth".
+
+**¿Por qué?** Si otro desarrollador busca "¿qué protege la ruta de customers?", no pensará en buscar dentro de `features/auth/`. Es una cuestión de **discoverability**.
+
+#### 1.3 — No existe capa `core/`
+
+Tu proyecto tiene `features/` y `shared/`, pero le falta `core/`. Sugiero crear `app/core/` para:
+- Interceptores (actualmente en `shared/interceptors/`)
+- Guards transversales
+- El `environment` file import helper
+- Servicios singleton que **no son reutilizables** sino que orquestan la app (como `AuthService`)
+
+**¿Por qué?** La convención `core/` comunica "esto se carga UNA sola vez al inicio y son singletons de la aplicación", mientras que `shared/` comunica "esto se reutiliza en múltiples features". Un interceptor no se "comparte" como se comparte un componente; se **registra** una vez.
+
+#### 1.4 — Los modelos compartidos en `shared/models/` tienen modelos de dominio demasiado específicos
+
+Los archivos [creditSummary.model.ts](file:///c:/Tesis-David/tesis-front/src/app/shared/models/creditSummary.model.ts) y [dashboardAlert.model.ts](file:///c:/Tesis-David/tesis-front/src/app/shared/models/dashboardAlert.model.ts) están en `shared/models/`, pero realmente son modelos que **solo usa un feature** (credits y dashboard respectivamente). La regla es:
+
+- Si un modelo lo usa **un solo feature** → va dentro de `features/<feature>/models/`
+- Si lo usan **múltiples features** → va en `shared/models/`
+- Genéricos de API (`ApiResponse<T>`) → `shared/models/` o `core/models/` ✅
+
+#### 1.5 — Inconsistencia: `SemaphoreStatus` vive en `customer.model.ts`
+
+En [customer.model.ts](file:///c:/Tesis-David/tesis-front/src/app/features/customers/models/customer.model.ts#L15), `SemaphoreStatus` se define al final del archivo del modelo de Customer. Pero lo usan tanto `credits/` como `shared/components/semaphore-badge/`. Esto crea un **acoplamiento circular** de dependencia conceptual: el componente compartido depende de un modelo de un feature específico.
+
+**Sugerencia**: Mueve `SemaphoreStatus` a `shared/models/semaphore.model.ts`. Es un tipo que trasciende el feature "customers".
+
+---
+
+## 2. Gestión de Estado y Servicios
+
+### ✅ Lo que está bien
+
+| Aspecto | Veredicto |
+|---|---|
+| Uso de `signal()` para estado reactivo local en componentes | **Moderno y correcto** — Angular Signals es el futuro del framework |
+| `AuthService` con señales para el usuario autenticado | **Excelente** patrón para estado global de auth |
+| `ToastService` con señales y API limpia | **Bien diseñado** y reusable |
+
+### ⚠️ Hallazgos y Sugerencias
+
+#### 2.1 — Todos los servicios son `providedIn: 'root'`, incluso los de feature
+
+Cada servicio del proyecto ([DashboardService](file:///c:/Tesis-David/tesis-front/src/app/features/dashboard/services/dashboard.service.ts#L6), [CustomerService](file:///c:/Tesis-David/tesis-front/src/app/features/customers/services/customer.service.ts#L7), [CreditService](file:///c:/Tesis-David/tesis-front/src/app/features/credits/services/credit.service.ts#L6), [CashService](file:///c:/Tesis-David/tesis-front/src/app/features/cash/services/cash.service.ts#L6), [ReportService](file:///c:/Tesis-David/tesis-front/src/app/features/reports/services/report.service.ts#L5), [PublicStatementService](file:///c:/Tesis-David/tesis-front/src/app/features/public-statement/services/public-statement.service.ts#L6)) usa `providedIn: 'root'`.
+
+**¿Por qué es un problema?** Con `providedIn: 'root'`, todos los servicios se instancian como singletons globales, incluso si el usuario nunca navega a esa feature. No se benefician del tree-shaking por feature. Para un servicio que solo usa dashboard, debería proveerse a nivel de la ruta:
+
+```typescript
+// En la ruta de dashboard:
+{
+  path: 'dashboard',
+  loadComponent: () => import('./features/dashboard/pages/dashboard.page').then(m => m.DashboardPage),
+  providers: [DashboardService]  // se destruye cuando sales de la ruta
+}
+```
+
+Excepción legítima para `providedIn: 'root'`: `AuthService`, `ToastService` — sí necesitan ser singletons de aplicación.
+
+#### 2.2 — Suscripciones no gestionadas (Memory Leaks)
+
+**Problema crítico de rendimiento.** En múltiples componentes, las suscripciones a `subscribe()` **nunca se desuscriben**:
+
+| Archivo | Línea(s) | Observable |
+|---|---|---|
+| [dashboard.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/dashboard/pages/dashboard.page.ts#L51-L62) | 51, 56 | `getDashboardAlerts()`, `getDashboardStats()` |
+| [customers.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/customers/pages/customers.page.ts#L50-L68) | 50, 65 | `createCustomer()`, `getCustomers()` |
+| [credits.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/credits/pages/credits.page.ts#L43-L69) | 43, 61, 66, 86, 110 | Múltiples suscripciones |
+| [cash.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/cash/pages/cash.page.ts#L40-L58) | 40, 47, 98, 110, 129 | Múltiples suscripciones |
+| [users.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/users/pages/users.page.ts#L38) | 38 | `createCajero()` |
+| [auth.service.ts](file:///c:/Tesis-David/tesis-front/src/app/features/auth/services/auth.service.ts#L71) | 71 | `logout()` — subscribe dentro del servicio |
+
+**¿Por qué importa?** Aunque las llamadas HTTP de Angular se completan automáticamente (un solo `next`/`error`), esto NO es siempre el caso: si la respuesta tarda y el usuario navega a otra ruta, el callback se ejecutará sobre un componente ya destruido, potencialmente causando errores o actualizaciones de estado fantasma.
+
+**Solución Angular 17+**: Usa `DestroyRef` + `takeUntilDestroyed()`:
+
+```typescript
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+export class DashboardPage {
+  private readonly destroyRef = inject(DestroyRef);
+
+  ngOnInit() {
+    this.dashboardService.getDashboardAlerts()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({...});
+  }
+}
+```
+
+O aún mejor, usa `toSignal()` del `@angular/core/rxjs-interop` para convertir el observable a señal directamente.
+
+#### 2.3 — Uso excesivo de `any` en tipos de servicio
+
+| Archivo | Ubicación | Problema |
+|---|---|---|
+| [dashboard.service.ts](file:///c:/Tesis-David/tesis-front/src/app/features/dashboard/services/dashboard.service.ts#L11) | `getDashboardAlerts()` | Retorna `ApiResponse<any[]>` |
+| [credit.service.ts](file:///c:/Tesis-David/tesis-front/src/app/features/credits/services/credit.service.ts#L11-L17) | `getCustomerCredits()`, `createCredit()` | Retorna `ApiResponse<any[]>`, `ApiResponse<any>` |
+| [cash.service.ts](file:///c:/Tesis-David/tesis-front/src/app/features/cash/services/cash.service.ts#L10-L35) | Múltiples métodos | Usa `ApiResponse<unknown>` sin tipar la data |
+| [cash.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/cash/pages/cash.page.ts#L20-L21) | Señales | `signal<any>(null)`, `signal<any[]>([])` |
+| [credits.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/credits/pages/credits.page.ts#L44) | Constructor | `(response: any)` |
+
+**¿Por qué?** `any` deshabilita todo el sistema de tipos de TypeScript. Pierdes autocompletado, errores en compile-time, y cualquier refactoring se vuelve peligroso. **Para una tesis, esto es especialmente importante** porque un revisor evaluará la calidad tipada.
+
+**Sugerencia**: Crea interfaces para cada respuesta de API. Ejemplo para `CashSession`:
+
+```typescript
+// features/cash/models/cash.model.ts
+export interface CashSession {
+  id: string;
+  status: 'OPEN' | 'CLOSED';
+  openingBalance: number;
+  movements: CashMovement[];
+  // ...
+}
+
+export interface CashMovement {
+  id: string;
+  movementType: 'INCOME' | 'EXPENSE';
+  amount: number;
+  concept: string;
+}
+```
+
+#### 2.4 — `AuthService.createCajero()` no pertenece a `AuthService`
+
+La función [createCajero()](file:///c:/Tesis-David/tesis-front/src/app/features/auth/services/auth.service.ts#L85-L90) crea usuarios del sistema. Esto es lógica de **gestión de usuarios**, no de **autenticación**. Mezclar responsabilidades viola el **Single Responsibility Principle (SRP)**.
+
+**Sugerencia**: Crea `features/users/services/user.service.ts` y mueve `createCajero()` ahí. El `AuthService` solo debería manejar: `login()`, `logout()`, `getToken()`, `isAuthenticated()`, `getCurrentUser()`.
+
+#### 2.5 — `environment.apiBaseUrl` se repite en cada servicio con rutas relativas profundas
+
+Cada servicio importa `environment` con paths como `../../../../environments/environment`. Esto es frágil y dificulta refactorings.
+
+**Sugerencia**: Configura un path alias en [tsconfig.json](file:///c:/Tesis-David/tesis-front/tsconfig.json):
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@env": ["environments/environment"],
+      "@shared/*": ["app/shared/*"],
+      "@features/*": ["app/features/*"],
+      "@core/*": ["app/core/*"]
+    }
+  }
+}
+```
+
+Así los imports quedan como:
+```typescript
+import { environment } from '@env';
+import { ApiResponse } from '@shared/models/api.models';
+```
+
+---
+
+## 3. Performance y Mejores Prácticas
+
+### ✅ Lo que está bien
+
+| Aspecto | Veredicto |
+|---|---|
+| `loadComponent` con lazy loading en todas las rutas | **Excelente** — cada feature se carga on-demand |
+| Standalone Components sin NgModules | **Perfecto** para tree-shaking óptimo |
+| Budgets de producción configurados (`500kb warn / 1mb error`) | **Buena práctica** |
+| Service Worker para PWA | **Bien configurado** |
+
+### ⚠️ Hallazgos y Sugerencias
+
+#### 3.1 — `Chart.register(...registerables)` registra TODO chart.js globalmente
+
+En [dashboard.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/dashboard/pages/dashboard.page.ts#L9), la línea `Chart.register(...registerables)` se ejecuta a nivel de módulo (fuera de la clase). Esto:
+
+1. **Importa todas las funcionalidades de chart.js** (~60kb gzipped) incluso si solo usas `doughnut` y `bar`
+2. Se ejecuta **en el momento que el módulo se importa**, no cuando realmente se necesita
+
+**Sugerencia**: Registra solo los componentes que usas:
+
+```typescript
+import { Chart, DoughnutController, BarController, ArcElement, BarElement, 
+         CategoryScale, LinearScale, Legend, Tooltip } from 'chart.js';
+
+Chart.register(DoughnutController, BarController, ArcElement, BarElement,
+               CategoryScale, LinearScale, Legend, Tooltip);
+```
+
+Esto puede reducir el bundle de chart.js en ~30-40%.
+
+#### 3.2 — `setTimeout` para sincronizar rendering de charts
+
+En [dashboard.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/dashboard/pages/dashboard.page.ts#L74), usas `setTimeout(() => {...}, 100)` para esperar a que el DOM esté listo. Esto es un anti-pattern porque:
+
+- 100ms es arbitrario; puede fallar en dispositivos lentos
+- No es determinístico
+
+**Sugerencia**: Usa `afterNextRender()` de Angular 17 o simplemente mueve el rendering al `AfterViewInit` con un flag de datos cargados:
+
+```typescript
+import { afterNextRender } from '@angular/core';
+
+// Cuando llegan los datos:
+this.statsData.set(response.data);
+afterNextRender(() => this.renderCharts(), { injector: this.injector });
+```
+
+#### 3.3 — Fuentes duplicadas entre `index.html` y `styles.scss`
+
+- [index.html](file:///c:/Tesis-David/tesis-front/src/index.html#L13) carga **Plus Jakarta Sans** y **Fira Code**
+- [styles.scss](file:///c:/Tesis-David/tesis-front/src/styles.scss#L1) carga **Manrope** vía `@import url(...)`
+- [tailwind.config.cjs](file:///c:/Tesis-David/tesis-front/tailwind.config.cjs#L25) declara **Plus Jakarta Sans** como font principal
+
+**Problemas**:
+1. Estás descargando **3 familias de fuentes** pero el body usa Manrope (styles.scss L46), Tailwind dice Plus Jakarta Sans, y el HTML precarga ambas. Decide **UNA** fuente principal.
+2. El `@import url()` en SCSS es **render-blocking**. Mueve esa carga al `<link>` del HTML con `display=swap`.
+
+#### 3.4 — No hay `ChangeDetectionStrategy.OnPush` en ningún componente
+
+Ninguno de tus componentes usa `OnPush`. En Angular 17 con signals esto es menos crítico porque signals optimizan el change detection, pero `OnPush` sigue siendo una buena práctica porque **documenta la intención**: "este componente solo se re-renderiza cuando cambian sus inputs o señales".
+
+```typescript
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // ...
+})
+```
+
+#### 3.5 — `ngOnInit` vacío en `UsersPage`
+
+En [users.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/users/pages/users.page.ts#L26), `ngOnInit() {}` está vacío. Si implementas `OnInit` solo para dejar el método vacío, **remuévelo**. Es ruido que confunde a otros developers.
+
+#### 3.6 — Iconos: todos los iconos se registran globalmente
+
+En [icons.provider.ts](file:///c:/Tesis-David/tesis-front/src/app/shared/icons/icons.provider.ts), registras **36 iconos** en el bundle principal. Si una feature solo usa 2, igual carga los 36.
+
+**Sugerencia para el futuro**: Cuando el proyecto crezca, considera registrar iconos por feature usando `provideIcons()` en el `providers` de cada ruta lazy.
+
+---
+
+## 4. Calidad de Código
+
+### ⚠️ Hallazgos y Sugerencias
+
+#### 4.1 — No existe ESLint ni Prettier configurado
+
+No encontré `.eslintrc.json`, `.prettierrc`, ni dependencias de linting en [package.json](file:///c:/Tesis-David/tesis-front/package.json). Esto es **crítico para una tesis** porque:
+
+- No hay enforcement de estilo consistente
+- No hay detección estática de errores
+- Diferencias de formato entre commits contaminan el historial git
+
+**Setup recomendado**:
+
+```bash
+pnpm add -D @angular-eslint/builder @angular-eslint/eslint-plugin @angular-eslint/eslint-plugin-template @angular-eslint/schematics @angular-eslint/template-parser @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint prettier eslint-config-prettier eslint-plugin-prettier
+```
+
+Reglas ESLint clave para tu proyecto:
+```json
+{
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/explicit-function-return-type": "warn",
+    "@angular-eslint/prefer-on-push-component-change-detection": "warn",
+    "@angular-eslint/use-lifecycle-interface": "error",
+    "no-console": ["warn", { "allow": ["error"] }]
+  }
+}
+```
+
+#### 4.2 — Inconsistencia entre `ReactiveFormsModule` y `FormsModule`
+
+| Feature | Módulo de Forms | Archivo |
+|---|---|---|
+| Login | `ReactiveFormsModule` ✅ | [login.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/auth/pages/login.page.ts#L13) |
+| Customers | `ReactiveFormsModule` ✅ | [customers.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/customers/pages/customers.page.ts#L14) |
+| Credits | `FormsModule` (template-driven) ⚠️ | [credits.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/credits/pages/credits.page.ts#L19) |
+| Cash | `FormsModule` (template-driven) ⚠️ | [cash.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/cash/pages/cash.page.ts#L14) |
+| Users | `FormsModule` (template-driven) ⚠️ | [users.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/users/pages/users.page.ts#L12) |
+
+**¿Por qué es un problema?** La inconsistencia genera confusión. Los **Reactive Forms** son superiores para testing, validación compleja y tipado. Para una tesis, **estandariza en Reactive Forms** en todo el proyecto. Template-driven con `[(ngModel)]` y variables como `name = ''` es menos mantenible:
+
+- No tiene validación declarativa
+- El estado del formulario no es inspectable programáticamente
+- Dificulta unit tests
+
+#### 4.3 — Credenciales hardcodeadas en el formulario de login
+
+En [login.page.ts](file:///c:/Tesis-David/tesis-front/src/app/features/auth/pages/login.page.ts#L22-L23):
+
+```typescript
+email: ['admin@minimarket.local', [Validators.required, Validators.email]],
+password: ['Admin123*', [Validators.required]],
+```
+
+Y en [login.page.html](file:///c:/Tesis-David/tesis-front/src/app/features/auth/pages/login.page.html#L27) los placeholders también muestran la contraseña: `placeholder="Admin123*"`.
+
+**Para la tesis**, está bien para demos, pero agrega un comentario `// TODO: Remove demo credentials before production` y asegúrate de que esté documentado.
+
+#### 4.4 — `angular.json` dice `packageManager: "npm"` pero usas pnpm
+
+En [angular.json](file:///c:/Tesis-David/tesis-front/angular.json#L5), `"packageManager": "npm"` debería ser `"pnpm"`. Tienes `pnpm-lock.yaml` y `pnpm-workspace.yaml` pero también un `package-lock.json` (que es de npm). **Elimina `package-lock.json`** y cambia la configuración.
+
+#### 4.5 — `*ngIf` en lugar de `@if` (nuevo control flow de Angular 17)
+
+Angular 17 introduce el nuevo control flow (`@if`, `@for`, `@switch`) que es:
+- Más performante (no requiere importar `CommonModule`)
+- Mejor type narrowing
+- Sintaxis más clara
+
+Tu proyecto usa `*ngIf` y `*ngFor` en todas partes. Para una tesis en Angular 17+, **se espera que uses el nuevo control flow**:
+
+```html
+<!-- Antes -->
+<div *ngIf="isAdmin; else cajeroView">...</div>
+<article *ngFor="let alert of alerts()">...</article>
+
+<!-- Después -->
+@if (isAdmin) {
+  <div>...</div>
+} @else {
+  <div>...</div>
+}
+
+@for (alert of alerts(); track alert.creditId) {
+  <article>...</article>
+}
+```
+
+> [!IMPORTANT]
+> El nuevo control flow no requiere importar `CommonModule`, lo que reduce el bundle de cada componente que lo adopte.
+
+#### 4.6 — `CommonModule` importado en casi todos los componentes
+
+Si migras al nuevo control flow (`@if`, `@for`), puedes **eliminar `CommonModule`** de la mayoría de componentes. El único caso donde aún lo necesitas es si usas pipes como `date`, `currency`, etc. En ese caso, importa solo `DatePipe` o `CurrencyPipe` directamente — es más granular y tree-shakeable.
+
+---
+
+## 5. Accesibilidad y Seguridad
+
+### 🔴 Hallazgos Críticos
+
+#### 5.1 — `authGuard` no aplicado (Repetido por importancia)
+
+Como mencioné en §1.1, el guard se importa pero **no se usa**. Cualquier persona con la URL puede ver datos financieros. **Esto es la prioridad #1 a corregir**.
+
+#### 5.2 — No hay role guard
+
+Las rutas de `/customers`, `/reports`, y `/users` deberían ser accesibles **solo para ADMIN**, pero no existe un `roleGuard`. El sidebar lo oculta con `*ngIf="isAdmin()"` pero eso es **security by obscurity**: esconder un botón no protege la ruta.
+
+**Sugerencia**: Crea un `roleGuard`:
+
+```typescript
+export const adminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return auth.isAdmin() || inject(Router).createUrlTree(['/dashboard']);
+};
+```
+
+#### 5.3 — `window.location.href` en logout fuerza full page reload
+
+En [auth.service.ts](file:///c:/Tesis-David/tesis-front/src/app/features/auth/services/auth.service.ts#L67), el logout usa `window.location.href = '/login'` en lugar de `Router.navigateByUrl('/login')`. Esto:
+
+- Destruye todo el estado del SPA
+- Es más lento (recarga toda la app)
+- Evita que el Service Worker funcione correctamente
+
+El comentario dice "Full reload to clear app state", pero si limpias `localStorage` y reseteas las señales, **ya limpiaste el estado**. Usa el Router.
+
+#### 5.4 — `loadUser()` parsea JSON de localStorage sin validación
+
+En [auth.service.ts](file:///c:/Tesis-David/tesis-front/src/app/features/auth/services/auth.service.ts#L92-L96):
+
+```typescript
+private loadUser(): AuthUser | null {
+  const raw = localStorage.getItem(this.userKey);
+  return raw ? JSON.parse(raw) : null;
+}
+```
+
+**Problemas**:
+1. Si `localStorage` contiene JSON corrupto, `JSON.parse` lanzará una excepción no capturada que **romperá toda la app al iniciar**
+2. No hay validación de que el objeto parseado realmente tenga la forma de `AuthUser`
+
+**Sugerencia**: Wrap en try-catch y valida la estructura:
+
+```typescript
+private loadUser(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem(this.userKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.id && parsed.email && parsed.role) {
+      return parsed as AuthUser;
+    }
+    return null;
+  } catch {
+    localStorage.removeItem(this.userKey);
+    return null;
+  }
+}
+```
+
+#### 5.5 — `environment.prod.ts` apunta a `localhost`
+
+En [environment.prod.ts](file:///c:/Tesis-David/tesis-front/src/environments/environment.prod.ts#L3):
+
+```typescript
+apiBaseUrl: 'http://localhost:3000/api'  // ⚠️ También en producción
+```
+
+Esto no funcionará en producción real. Además, usa `http://` sin TLS, lo que expone tokens en tránsito. Para la tesis documenta que en producción debería ser `https://`.
+
+#### 5.6 — Formularios sin atributos de accesibilidad
+
+En los templates de login, customers, credits y cash:
+
+- Los `<label>` no usan el atributo `for` ni están conectados al `<input>` con `id`
+- No hay `aria-label` en botones de iconos
+- No hay `aria-describedby` para mensajes de error
+- El botón de logout en el sidebar (línea 94-100 de layout-shell) no tiene indicador visual de rol
+
+**Ejemplo de corrección**:
+
+```html
+<label for="login-email" class="...">Correo</label>
+<input id="login-email" formControlName="email" type="email" 
+       aria-describedby="email-error" ... />
+<p id="email-error" *ngIf="form.get('email')?.hasError('email')" 
+   role="alert">Ingresa un correo válido</p>
+```
+
+#### 5.7 — Error interceptor llama `logout()` que navega Y el interceptor también navega
+
+En [error.interceptor.ts](file:///c:/Tesis-David/tesis-front/src/app/shared/interceptors/error.interceptor.ts#L13-L15):
+
+```typescript
+if (error.status === 401) {
+  authService.logout();          // → window.location.href = '/login'
+  void router.navigateByUrl('/login');  // → también navega
+}
+```
+
+Se produce una **doble navegación**: el `logout()` hace un hard redirect y el interceptor intenta un soft redirect. Solo necesitas uno (preferiblemente el soft redirect del Router).
+
+---
+
+## 6. Tabla Resumen de Priorización
+
+| # | Hallazgo | Severidad | Esfuerzo | Impacto en Tesis |
+|---|---|---|---|---|
+| 5.1 | `authGuard` no aplicado en rutas | 🔴 Crítico | 5 min | Seguridad |
+| 1.1 | `LayoutShellComponent` no en rutas | 🔴 Crítico | 5 min | La app no renderiza el layout |
+| 5.2 | Sin role guard para ADMIN | 🔴 Alto | 15 min | Seguridad |
+| 2.2 | Suscripciones sin cleanup | 🟠 Alto | 30 min | Memory leaks |
+| 2.3 | Uso de `any` en servicios | 🟠 Alto | 45 min | Calidad tipada |
+| 4.1 | Sin ESLint/Prettier | 🟠 Alto | 30 min | Profesionalismo |
+| 5.4 | JSON.parse sin try-catch | 🟠 Medio | 10 min | Robustez |
+| 4.5 | `*ngIf`/`*ngFor` → `@if`/`@for` | 🟡 Medio | 1h | Modernidad Angular 17 |
+| 5.7 | Doble navegación en logout | 🟡 Medio | 10 min | Bug |
+| 2.5 | Path aliases en tsconfig | 🟡 Medio | 15 min | DX y mantenibilidad |
+| 3.1 | chart.js registra todo | 🟡 Bajo | 15 min | Performance |
+| 3.3 | Fuentes duplicadas | 🟡 Bajo | 15 min | Performance |
+| 4.4 | pnpm vs npm inconsistencia | ⚪ Bajo | 5 min | Consistencia |
+
+---
+
+## 7. Diagrama de Arquitectura Sugerida
+
+```mermaid
+graph TD
+    A["app.component.ts"] --> B["app.routes.ts"]
+    B --> C["Login Page (public)"]
+    B --> D["Public Statement Page (public)"]
+    B --> E["LayoutShellComponent + authGuard"]
+    
+    E --> F["Dashboard Page"]
+    E --> G["Customers Page + adminGuard"]
+    E --> H["Credits Page"]
+    E --> I["Cash Page"]
+    E --> J["Reports Page + adminGuard"]
+    E --> K["Users Page + adminGuard"]
+    
+    subgraph "core/"
+        L["AuthService"]
+        M["auth.interceptor"]
+        N["error.interceptor"]
+        O["auth.guard"]
+        P["admin.guard"]
+    end
+    
+    subgraph "shared/"
+        Q["UI Components"]
+        R["Toast Service"]
+        S["Models genéricos"]
+    end
+    
+    subgraph "features/"
+        T["Cada feature con sus models/, services/, pages/"]
+    end
+```
+
+---
+
+> [!TIP]
+> **Mi recomendación de orden de acción**: Corrige primero los 🔴 (5 minutos cada uno), luego configura ESLint, y después ve migrando a `@if`/`@for` y tipando los `any`. Esto transformará significativamente la percepción de calidad profesional de la tesis.

@@ -20,42 +20,60 @@
           </div>
 
           <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
-            <label class="form-control w-full">
+            <label for="login-email" class="form-control w-full">
               <div class="label">
                 <span class="label-text text-xs font-bold uppercase tracking-widest">Correo</span>
               </div>
               <input
+                id="login-email"
                 formControlName="email"
                 type="email"
                 placeholder="admin@minimarket.local"
                 class="input input-bordered w-full"
+                [class.input-error]="form.get('email')?.invalid && form.get('email')?.touched"
+                aria-describedby="login-email-error"
               />
+              @if (form.get('email')?.invalid && form.get('email')?.touched) {
+                <div class="label">
+                  <span class="label-text-alt text-error">Correo electrónico inválido o requerido</span>
+                </div>
+              }
             </label>
 
-            <label class="form-control w-full">
+            <label for="login-password" class="form-control w-full">
               <div class="label">
                 <span class="label-text text-xs font-bold uppercase tracking-widest">Clave</span>
               </div>
               <input
+                id="login-password"
                 formControlName="password"
                 type="password"
-                placeholder="Admin123*"
+                placeholder="••••••••"
                 class="input input-bordered w-full"
+                [class.input-error]="form.get('password')?.invalid && form.get('password')?.touched"
               />
+              @if (form.get('password')?.invalid && form.get('password')?.touched) {
+                <div class="label">
+                  <span class="label-text-alt text-error">Contraseña es requerida</span>
+                </div>
+              }
             </label>
 
-            <button class="btn btn-primary w-full mt-2" type="submit" [disabled]="loading()">
+            <button class="btn btn-primary w-full mt-2" type="submit" [disabled]="loading() || form.invalid">
               {{ loading() ? 'Ingresando...' : 'Ingresar' }}
             </button>
           </form>
 
           <div class="flex flex-col gap-2 text-sm">
             <div class="alert alert-info text-xs">
+              <!-- TODO: Remove demo credentials before production -->
               <span>Usuario demo: admin&#64;minimarket.local / Admin123*</span>
             </div>
-            <div class="alert alert-error text-xs" *ngIf="error()">
-              <span>{{ error() }}</span>
-            </div>
+            @if (error()) {
+              <div id="login-email-error" class="alert alert-error text-xs" role="alert">
+                <span>{{ error() }}</span>
+              </div>
+            }
           </div>
         </div>
       </div>

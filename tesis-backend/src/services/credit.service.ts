@@ -2,7 +2,7 @@ import { CreditStatus } from "../entities/enums/credit-status.enum";
 import { PaymentType } from "../entities/enums/payment-type.enum";
 import { AppError } from "../utils/app-error.util";
 import { calculateSemaphore } from "../utils/semaphore.util";
-import { env } from "../config/environment";
+import { config } from "../config/environment";
 import { EmailService } from "./email.service";
 import { StatementService } from "./statement.service";
 import { CreditRepository } from "../repositories/credit.repository";
@@ -25,7 +25,7 @@ export class CreditService {
   async getSemaphoreByCustomer(customerId: string) {
     const account = await this.accountRepo.findByCustomerWithCredits(customerId);
     if (!account) throw new AppError("Cuenta de credito no encontrada", 404, "ACCOUNT_NOT_FOUND");
-    return calculateSemaphore(account.credits, env.DUE_SOON_DAYS);
+    return calculateSemaphore(account.credits, config.app.dueSoonDays);
   }
 
   async assertCanCreateCredit(customerId: string) {
@@ -156,7 +156,7 @@ export class CreditService {
     await this.accountRepo.save(account);
 
     const tokenResult = await this.statementService.generateTokenByCustomer(customer.id);
-    const statementUrl = `${env.FRONTEND_BASE_URL}/estado-cuenta/${tokenResult.token}`;
+    const statementUrl = `${config.server.frontendBaseUrl}/estado-cuenta/${tokenResult.token}`;
 
     await this.emailService.sendCreditNotification({
       to: input.email,

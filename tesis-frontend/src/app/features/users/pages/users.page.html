@@ -65,37 +65,42 @@
       </h2>
 
       <div class="flex flex-col gap-4 mt-3">
-        <label class="form-control">
+        <label for="user-name" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Nombre Completo</span>
           </div>
-          <input type="text" [(ngModel)]="name" placeholder="Ej. Ana Perez" class="input input-bordered w-full" />
+          <input id="user-name" type="text" [(ngModel)]="name" placeholder="Ej. Ana Perez" class="input input-bordered w-full" />
         </label>
 
-        <label class="form-control">
+        <label for="user-email" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Correo Operativo</span>
           </div>
-          <input type="email" [(ngModel)]="email" placeholder="cajero@sistema.local" class="input input-bordered w-full font-mono" />
+          <input id="user-email" type="email" [(ngModel)]="email" placeholder="cajero@sistema.local" class="input input-bordered w-full font-mono" />
         </label>
 
-        <label class="form-control">
+        <label for="user-password" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Contrasena Temporal</span>
           </div>
-          <input type="password" [(ngModel)]="password" placeholder="Minimo 6 caracteres" class="input input-bordered w-full font-mono" />
+          <input id="user-password" type="password" [(ngModel)]="password" placeholder="Minimo 6 caracteres" class="input input-bordered w-full font-mono" />
         </label>
 
         <button (click)="createCajero()" [disabled]="loading()" class="btn btn-primary w-full">
-          <ng-icon name="heroCheckCircle" *ngIf="!loading()"></ng-icon>
-          <ng-icon name="heroArrowPath" class="animate-spin" *ngIf="loading()"></ng-icon>
+          @if (!loading()) {
+            <ng-icon name="heroCheckCircle"></ng-icon>
+          } @else {
+            <ng-icon name="heroArrowPath" class="animate-spin"></ng-icon>
+          }
           {{ loading() ? 'Procesando...' : 'Registrar Cajero' }}
         </button>
 
-        <div class="alert" [ngClass]="success() ? 'alert-success' : 'alert-error'" *ngIf="message()">
-          <ng-icon [name]="success() ? 'heroCheckCircle' : 'heroExclamationCircle'" class="text-base"></ng-icon>
-          <span class="text-xs font-bold">{{ message() }}</span>
-        </div>
+        @if (message()) {
+          <div class="alert" [ngClass]="success() ? 'alert-success' : 'alert-error'">
+            <ng-icon [name]="success() ? 'heroCheckCircle' : 'heroExclamationCircle'" class="text-base"></ng-icon>
+            <span class="text-xs font-bold">{{ message() }}</span>
+          </div>
+        }
       </div>
     </div>
   </div>

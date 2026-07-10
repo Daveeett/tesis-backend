@@ -21,34 +21,38 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let customer of customers()">
-              <td>
-                <div class="flex items-center gap-3">
-                  <div class="avatar placeholder">
-                    <div class="bg-primary/10 text-primary rounded-full w-9">
-                      {{ customer.fullName.charAt(0).toUpperCase() }}
+            @for (customer of customers(); track customer.id) {
+              <tr>
+                <td>
+                  <div class="flex items-center gap-3">
+                    <div class="avatar placeholder">
+                      <div class="bg-primary/10 text-primary rounded-full w-9">
+                        {{ customer.fullName.charAt(0).toUpperCase() }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-semibold">{{ customer.fullName }}</div>
+                      <div class="text-xs text-base-content/60">{{ customer.phone }}</div>
                     </div>
                   </div>
-                  <div>
-                    <div class="font-semibold">{{ customer.fullName }}</div>
-                    <div class="text-xs text-base-content/60">{{ customer.phone }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="font-mono text-sm">
-                {{ customer.docType }} - {{ customer.docNumber }}
-              </td>
-              <td class="text-right">
-                <app-semaphore-badge [status]="customer.semaphore?.status ?? 'GREEN'"></app-semaphore-badge>
-              </td>
-            </tr>
+                </td>
+                <td class="font-mono text-sm">
+                  {{ customer.docType }} - {{ customer.docNumber }}
+                </td>
+                <td class="text-right">
+                  <app-semaphore-badge [status]="customer.semaphore?.status ?? 'GREEN'"></app-semaphore-badge>
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
 
-      <div *ngIf="customers().length === 0" class="p-8 text-center text-sm text-base-content/60">
-        No hay clientes registrados aun.
-      </div>
+      @if (customers().length === 0) {
+        <div class="p-8 text-center text-sm text-base-content/60">
+          No hay clientes registrados aun.
+        </div>
+      }
     </div>
   </div>
 
@@ -59,44 +63,79 @@
         Nuevo Cliente
       </h2>
       <form [formGroup]="form" (ngSubmit)="createCustomer()" class="flex flex-col gap-4 mt-3">
-        <label class="form-control">
+        <label for="customer-fullName" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Nombre Completo</span>
           </div>
-          <input formControlName="fullName" class="input input-bordered w-full" placeholder="Ej. Maria Garcia" />
+          <input id="customer-fullName" formControlName="fullName" class="input input-bordered w-full" [class.input-error]="form.get('fullName')?.invalid && (form.get('fullName')?.dirty || form.get('fullName')?.touched)" placeholder="Ej. Maria Garcia" />
+          @if (form.get('fullName')?.invalid && (form.get('fullName')?.dirty || form.get('fullName')?.touched)) {
+            <div class="label flex-col items-start gap-1">
+              @if (form.get('fullName')?.hasError('required')) {
+                <span class="label-text-alt text-error">El nombre completo es requerido</span>
+              }
+              @if (form.get('fullName')?.hasError('pattern')) {
+                <span class="label-text-alt text-error">Solo se permiten letras y espacios</span>
+              }
+            </div>
+          }
         </label>
 
         <div class="grid grid-cols-3 gap-3">
-          <label class="form-control col-span-1">
+          <label for="customer-docType" class="form-control col-span-1">
             <div class="label">
               <span class="label-text text-xs font-bold uppercase tracking-widest">Tipo</span>
             </div>
-            <select formControlName="docType" class="select select-bordered w-full">
+            <select id="customer-docType" formControlName="docType" class="select select-bordered w-full">
               <option value="CI">CI</option>
               <option value="RUC">RUC</option>
               <option value="PASSPORT">PASSPORT</option>
             </select>
           </label>
-          <label class="form-control col-span-2">
+          <label for="customer-docNumber" class="form-control col-span-2">
             <div class="label">
               <span class="label-text text-xs font-bold uppercase tracking-widest">Documento</span>
             </div>
-            <input formControlName="docNumber" class="input input-bordered w-full font-mono" placeholder="1700000000" />
+            <input id="customer-docNumber" formControlName="docNumber" class="input input-bordered w-full font-mono" [class.input-error]="form.get('docNumber')?.invalid && (form.get('docNumber')?.dirty || form.get('docNumber')?.touched)" placeholder="1700000000" />
+            @if (form.get('docNumber')?.invalid && (form.get('docNumber')?.dirty || form.get('docNumber')?.touched)) {
+              <div class="label flex-col items-start gap-1">
+                @if (form.get('docNumber')?.hasError('required')) {
+                  <span class="label-text-alt text-error">Requerido</span>
+                }
+                @if (form.get('docNumber')?.hasError('pattern')) {
+                  <span class="label-text-alt text-error">Solo se permiten números</span>
+                }
+              </div>
+            }
           </label>
         </div>
 
-        <label class="form-control">
+        <label for="customer-phone" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Telefono</span>
           </div>
-          <input formControlName="phone" class="input input-bordered w-full font-mono" placeholder="0999999999" />
+          <input id="customer-phone" formControlName="phone" class="input input-bordered w-full font-mono" [class.input-error]="form.get('phone')?.invalid && (form.get('phone')?.dirty || form.get('phone')?.touched)" placeholder="0999999999" />
+          @if (form.get('phone')?.invalid && (form.get('phone')?.dirty || form.get('phone')?.touched)) {
+            <div class="label flex-col items-start gap-1">
+              @if (form.get('phone')?.hasError('required')) {
+                <span class="label-text-alt text-error">El teléfono es requerido</span>
+              }
+              @if (form.get('phone')?.hasError('pattern')) {
+                <span class="label-text-alt text-error">Debe contener 10 números</span>
+              }
+            </div>
+          }
         </label>
 
-        <label class="form-control">
+        <label for="customer-email" class="form-control">
           <div class="label">
             <span class="label-text text-xs font-bold uppercase tracking-widest">Email (Opcional)</span>
           </div>
-          <input formControlName="email" type="email" class="input input-bordered w-full" placeholder="correo@ejemplo.com" />
+          <input id="customer-email" formControlName="email" type="email" class="input input-bordered w-full" [class.input-error]="form.get('email')?.invalid && (form.get('email')?.dirty || form.get('email')?.touched)" placeholder="correo@ejemplo.com" />
+          @if (form.get('email')?.invalid && (form.get('email')?.dirty || form.get('email')?.touched)) {
+            <div class="label">
+              <span class="label-text-alt text-error">Email inválido</span>
+            </div>
+          }
         </label>
 
         <button type="submit" [disabled]="form.invalid" class="btn btn-primary w-full">

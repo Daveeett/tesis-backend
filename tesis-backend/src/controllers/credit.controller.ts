@@ -1,22 +1,7 @@
 import { Request, Response } from "express";
-import { z } from "zod";
-import { PaymentType } from "../entities/enums/payment-type.enum";
 import { CreditService } from "../services/credit.service";
 import { ok } from "../utils/response.util";
-
-const createCreditSchema = z.object({
-  customerId: z.string().uuid(),
-  email: z.string().email(),
-  amount: z.coerce.number().positive(),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-});
-
-const paymentSchema = z.object({
-  creditId: z.string().uuid(),
-  amount: z.coerce.number().positive(),
-  method: z.nativeEnum(PaymentType).default(PaymentType.CASH),
-  reference: z.string().optional(),
-});
+import { createCreditSchema, paymentSchema } from "../entities/constants/credit.constants";
 
 class CreditController {
   private readonly creditService = new CreditService();

@@ -1,16 +1,7 @@
 import { Request, Response } from "express";
-import { z } from "zod";
-import { CashMovementType } from "../entities/enums/cash-movement-type.enum";
-import { CashService } from "../services/cash.service";
 import { ok } from "../utils/response.util";
-
-const openSchema = z.object({ openingBalance: z.coerce.number().min(0) });
-const movementSchema = z.object({
-  movementType: z.nativeEnum(CashMovementType),
-  amount: z.coerce.number().positive(),
-  concept: z.string().min(2),
-});
-const closeSchema = z.object({ closingBalance: z.coerce.number().min(0) });
+import { CashService } from "../services/cash.service";
+import { openSchema, movementSchema, closeSchema } from "../entities/constants/cash.constants";
 
 class CashController {
   private readonly cashService = new CashService();

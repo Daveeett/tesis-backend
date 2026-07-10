@@ -1,7 +1,7 @@
-<ng-container *ngIf="isAdmin; else cajeroView">
+@if (isAdmin) {
   <section class="mb-6">
     <h1 class="text-2xl font-bold">Dashboard Administrativo</h1>
-    <p class="text-sm text-base-content/70">Analitica en tiempo real, alertas de mora y salud de la operacion.</p>
+    <p class="text-sm text-base-content/70">Analitica en tiempo real, alertas de mora y salud del negocio.</p>
   </section>
 
   <div class="stats stats-vertical lg:stats-horizontal w-full bg-base-100 border border-base-300 shadow-sm mb-6">
@@ -25,7 +25,11 @@
       </div>
       <div class="stat-title text-xs uppercase tracking-widest">Creditos Activos</div>
       <div class="stat-value">
-        {{ statsData()?.semaphore ? (statsData()!.semaphore.green + statsData()!.semaphore.yellow + statsData()!.semaphore.red) : '...' }}
+        @if (statsData()?.semaphore) {
+          {{ statsData()!.semaphore.green + statsData()!.semaphore.yellow + statsData()!.semaphore.red }}
+        } @else {
+          ...
+        }
       </div>
     </div>
   </div>
@@ -38,10 +42,14 @@
             <ng-icon name="heroBanknotes" class="text-lg"></ng-icon>
             <h3 class="text-sm font-bold uppercase tracking-widest">Movimientos de Caja (Ultimos 7 dias)</h3>
           </div>
-          <p *ngIf="!statsData()" class="text-xs text-base-content/60 text-center py-10">Cargando datos...</p>
-          <p *ngIf="statsData() && !hasCashData()" class="text-xs text-base-content/60 text-center py-10 border border-dashed border-base-300 rounded-box">
-            Sin movimientos recientes.
-          </p>
+          @if (!statsData()) {
+            <p class="text-xs text-base-content/60 text-center py-10">Cargando datos...</p>
+          }
+          @if (statsData() && !hasCashData()) {
+            <p class="text-xs text-base-content/60 text-center py-10 border border-dashed border-base-300 rounded-box">
+              Sin movimientos recientes.
+            </p>
+          }
           <canvas #cashChart></canvas>
         </div>
       </div>
@@ -52,7 +60,9 @@
             <ng-icon name="heroChartPie" class="text-lg"></ng-icon>
             <h3 class="text-sm font-bold uppercase tracking-widest">Distribucion de Riesgo (Semaforo)</h3>
           </div>
-          <p *ngIf="!statsData()" class="text-xs text-base-content/60 text-center py-10">Cargando datos...</p>
+          @if (!statsData()) {
+            <p class="text-xs text-base-content/60 text-center py-10">Cargando datos...</p>
+          }
           <div class="w-full max-w-[300px] mx-auto">
             <canvas #semaphoreChart></canvas>
           </div>
@@ -71,33 +81,35 @@
         </div>
 
         <div class="divide-y divide-base-200">
-          <p *ngIf="!alerts().length" class="text-xs text-base-content/60 text-center py-12 px-6">
-            Sin alertas activas. La cartera esta saludable.
-          </p>
+          @if (!alerts().length) {
+            <p class="text-xs text-base-content/60 text-center py-12 px-6">
+              Sin alertas activas. La cartera esta saludable.
+            </p>
+          }
 
-          <article *ngFor="let alert of alerts()" class="px-5 py-4">
-            <div class="flex items-start justify-between gap-2 mb-2">
-              <h4 class="text-sm font-bold m-0 leading-tight">{{ alert.customerName }}</h4>
-              <span class="text-lg font-mono font-bold">${{ alert.amount }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs text-base-content/60 flex items-center gap-1">
-                <ng-icon name="heroCalendarDays" class="text-base-content/50"></ng-icon>
-                {{ alert.dueDate | date: 'dd/MM/yyyy' }}
-              </span>
-              <span class="badge badge-error badge-outline">
-                <ng-icon name="heroClock"></ng-icon>
-                {{ alert.daysOverdue }} dias
-              </span>
-            </div>
-          </article>
+          @for (alert of alerts(); track alert.creditId) {
+            <article class="px-5 py-4">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <h4 class="text-sm font-bold m-0 leading-tight">{{ alert.customerName }}</h4>
+                <span class="text-lg font-mono font-bold">${{ alert.amount }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-base-content/60 flex items-center gap-1">
+                  <ng-icon name="heroCalendarDays" class="text-base-content/50"></ng-icon>
+                  {{ alert.dueDate | date: 'dd/MM/yyyy' }}
+                </span>
+                <span class="badge badge-error badge-outline">
+                  <ng-icon name="heroClock"></ng-icon>
+                  {{ alert.daysOverdue }} dias
+                </span>
+              </div>
+            </article>
+          }
         </div>
       </div>
     </div>
   </div>
-</ng-container>
-
-<ng-template #cajeroView>
+} @else {
   <div class="card bg-base-100 border border-base-300 shadow-sm max-w-2xl mx-auto mt-12">
     <div class="card-body text-center">
       <div class="w-20 h-20 bg-primary/10 text-primary rounded-full grid place-items-center text-4xl mx-auto mb-4">
@@ -107,4 +119,4 @@
       <p class="text-sm text-base-content/70 max-w-sm mx-auto">Utiliza el menu lateral para gestionar la caja, revisar el directorio de clientes y registrar microcreditos.</p>
     </div>
   </div>
-</ng-template>
+}

@@ -1,20 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../shared/models/api.models';
+import { environment } from '@env';
+import { ApiResponse } from '@shared/models/api.models';
+import { CreditSummary, CreditDetail } from '../models/credit.model';
 
 @Injectable({ providedIn: 'root' })
 export class CreditService {
   constructor(private readonly http: HttpClient) {}
 
   getCustomerCredits(customerId: string) {
-    return this.http.get<ApiResponse<any[]>>(
+    return this.http.get<ApiResponse<CreditSummary[]>>(
       `${environment.apiBaseUrl}/credits/customer/${customerId}`,
     );
   }
 
   createCredit(customerId: string, payload: { amount: number; dueDate: string; email: string }) {
-    return this.http.post<ApiResponse<any>>(
+    return this.http.post<ApiResponse<CreditDetail>>(
       `${environment.apiBaseUrl}/credits`,
       {
         customerId,

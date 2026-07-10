@@ -1,7 +1,7 @@
 import * as nodemailer from "nodemailer";
 import dns from "node:dns";
 import { promisify } from "node:util";
-import { env } from "../config/environment";
+import { config } from "../config/environment";
 import { AppError } from "../utils/app-error.util";
 
 const resolveMx = promisify(dns.resolveMx);
@@ -21,8 +21,8 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: env.EMAIL_USER || process.env["EMAIL_USER"],
-        pass: env.EMAIL_PASS || process.env["EMAIL_PASS"],
+        user: config.email.user || process.env["EMAIL_USER"],
+        pass: config.email.pass || process.env["EMAIL_PASS"],
       },
       tls: {
         rejectUnauthorized: false,
@@ -53,7 +53,7 @@ export class EmailService {
   }
 
   async sendCreditNotification(data: CreditNotificationData): Promise<void> {
-    if (!env.EMAIL_USER && !process.env["EMAIL_USER"]) {
+    if (!config.email.user && !process.env["EMAIL_USER"]) {
       console.warn("Emails not configured - skipping notification.");
       return;
     }
@@ -77,7 +77,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: `"Mini Market Urbano" <${env.EMAIL_USER || process.env["EMAIL_USER"] || "no-reply@minimarket.local"}>`,
+        from: `"Mini Market Urbano" <${config.email.user || process.env["EMAIL_USER"] || "no-reply@minimarket.local"}>`,
         to: data.to,
         subject: "Nuevo Microcrédito - Mini Market Urbano",
         html,

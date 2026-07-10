@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { env } from "../config/environment";
+import { config } from "../config/environment";
 import { UserRole } from "../entities/enums/user-role.enum";
 
 export interface JwtPayload {
@@ -9,7 +9,7 @@ export interface JwtPayload {
 }
 
 export const signToken = (payload: JwtPayload): string =>
-  jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"] });
+  jwt.sign(payload, config.encryption.jwtSecret, { expiresIn: config.encryption.jwtExpiresIn as jwt.SignOptions["expiresIn"] });
 
 export const verifyToken = (token: string): JwtPayload =>
-  jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  jwt.verify(token, config.encryption.jwtSecret) as JwtPayload;
