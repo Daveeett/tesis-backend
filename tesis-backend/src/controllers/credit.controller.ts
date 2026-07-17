@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CreditService } from "../services/credit.service";
 import { ok } from "../utils/response.util";
-import { createCreditSchema, paymentSchema } from "../entities/constants/credit.constants";
+import { createCreditSchema, paymentSchema } from "../entities/schemas/credit.constants";
 
 class CreditController {
   private readonly creditService = new CreditService();

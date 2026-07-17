@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ok } from "../utils/response.util";
 import { CashService } from "../services/cash.service";
-import { openSchema, movementSchema, closeSchema } from "../entities/constants/cash.constants";
+import { openSchema, movementSchema, closeSchema } from "../entities/schemas/cash.constants";
 
 class CashController {
   private readonly cashService = new CashService();
@@ -17,7 +17,7 @@ class CashController {
   };
 
   open = async (req: Request, res: Response): Promise<void> => {
-    const { openingBalance } = openSchema.parse(req.body);
+    const {openingBalance } = openSchema.parse(req.body);
     const session = await this.cashService.openCash({ openingBalance, userId: req.auth!.userId });
     res.status(201).json(ok("Caja abierta", session));
   };

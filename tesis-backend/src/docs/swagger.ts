@@ -6,7 +6,7 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: "Mini Market Urbano API",
       version: "1.0.0",
-      description: "API para el sistema de gestión de mini market con microcréditos",
+      description: "API para el sistema",
     },
     components: {
       securitySchemes: {

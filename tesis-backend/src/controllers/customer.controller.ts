@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CustomerService } from "../services/customer.service";
 import { ok } from "../utils/response.util";
-import { createSchema } from "../entities/constants/customer.constants";
+import { createSchema } from "../entities/schemas/customer.constants";
 
 
 class CustomerController {

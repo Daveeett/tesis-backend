@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ProductService } from "../services/product.service";
 import { ok } from "../utils/response.util";
-import { createSchema } from "../entities/constants/product.constants";
+import { createSchema } from "../entities/schemas/product.constants";
 
 class ProductController {
   private readonly productService = new ProductService();

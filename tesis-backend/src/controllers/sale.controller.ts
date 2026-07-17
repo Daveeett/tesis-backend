@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ok } from "../utils/response.util";
-import { saleSchema } from "../entities/constants/sale.constants";
+import { saleSchema } from "../entities/schemas/sale.constants";
 import { SalesService } from "../services/sales.service";
 
 class SaleController {

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import { ok } from "../utils/response.util";
-import { loginSchema, cajeroSchema } from "../entities/constants/auth.constants";
+import { loginSchema, cajeroSchema } from "../entities/schemas/auth.constants";
 
 
 
